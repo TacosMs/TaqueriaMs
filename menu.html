@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Premium | Taquería MS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .menu-item {
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .category-btn.active {
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+        .delayed-animation {
+            animation-delay: 0.1s;
+        }
+        .hero-pattern {
+            background-image: radial-gradient(circle at 25% 50%, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Hero Section Minimalista -->
+    <header class="hero-pattern bg-amber-700 text-white py-20 md:py-28 relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="container mx-auto px-6 relative z-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">TAQUERÍA MS</h1>
+            <p class="text-xl md:text-2xl text-amber-100 font-light">Sabores auténticos, experiencia única</p>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-12 bg-gray-50 transform skew-y-2 origin-bottom"></div>
+    </header>
+
+    <!-- Navegación de Categorías -->
+    <nav class="sticky top-0 bg-white shadow-sm z-20">
+        <div class="container mx-auto px-4">
+            <div class="flex overflow-x-auto py-4 space-x-2 md:space-x-4 md:justify-center hide-scrollbar">
+                <button class="category-btn active px-5 py-2 rounded-full bg-black text-white font-medium whitespace-nowrap transition-all" data-category="tacos">
+                    Tacos Tradicionales
+                </button>
+                <button class="category-btn px-5 py-2 rounded-full bg-gray-100 text-gray-700 font-medium whitespace-nowrap transition-all" data-category="especiales">
+                    Especialidades
+                </button>
+                <button class="category-btn px-5 py-2 rounded-full bg-gray-100 text-gray-700 font-medium whitespace-nowrap transition-all" data-category="bebidas">
+                    Bebidas Artesanales
+                </button>
+                <button class="category-btn px-5 py-2 rounded-full bg-gray-100 text-gray-700 font-medium whitespace-nowrap transition-all" data-category="postres">
+                    Postres Mexicanos
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido del Menú -->
+    <main class="container mx-auto px-4 py-12">
+        <!-- Sección Tacos (Visible por defecto) -->
+        <section id="tacos" class="menu-category space-y-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Tacos Tradicionales</h2>
+                <div class="w-24 h-1 bg-amber-500 mx-auto"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Item 1 -->
+                <div class="menu-item bg-white rounded-lg overflow-hidden shadow-md">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1615870216519-2f9fa575fa5c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                             alt="Taco al Pastor" 
+                             class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                        <span class="absolute top-3 right-3 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+                            Más popular
+                        </span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-900">Al Pastor</h3>
+                            <span class="text-lg font-bold text-amber-600">$22</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Carne marinada en especias con piña, cilantro y cebolla.</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <span class="mr-3">🌶️ Picante medio</span>
+                            <span>⏱ 15 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="menu-item bg-white rounded-lg overflow-hidden shadow-md delayed-animation">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                             alt="Taco de Bistec" 
+                             class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-900">De Bistec</h3>
+                            <span class="text-lg font-bold text-amber-600">$24</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Corte fino de res con cebolla asada y guacamole.</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <span class="mr-3">🌶️ Suave</span>
+                            <span>⏱ 12 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Más items... -->
+            </div>
+        </section>
+
+        <!-- Sección Especialidades (Oculta inicialmente) -->
+        <section id="especiales" class="menu-category hidden space-y-12">
+            <!-- Similar estructura a Tacos -->
+        </section>
+
+        <!-- Sección Bebidas (Oculta) -->
+        <section id="bebidas" class="menu-category hidden space-y-12">
+            <!-- Similar estructura -->
+        </section>
+
+        <!-- Sección Postres (Oculta) -->
+        <section id="postres" class="menu-category hidden space-y-12">
+            <!-- Similar estructura -->
+        </section>
+    </main>
+
+    <!-- Footer Elegante -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-amber-400">Taquería MS</h3>
+                    <p class="text-gray-400">Auténtica cocina mexicana desde 2010.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Horario</h4>
+                    <p class="text-gray-400">Lunes a Domingo</p>
+                    <p class="text-gray-400">11:00 AM - 10:00 PM</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contacto</h4>
+                    <p class="text-gray-400">Calle Principal #123</p>
+                    <p class="text-gray-400">contacto@taqueriams.com</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+                <p>© 2024 Taquería MS. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Cambio de categorías sin duplicidad
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remover clase 'active' de todos los botones
+                document.querySelectorAll('.category-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-black', 'text-white');
+                    b.classList.add('bg-gray-100', 'text-gray-700');
+                });
+                
+                // Añadir clase 'active' al botón clickeado
+                this.classList.add('active', 'bg-black', 'text-white');
+                this.classList.remove('bg-gray-100', 'text-gray-700');
+                
+                // Ocultar todas las secciones
+                document.querySelectorAll('.menu-category').forEach(section => {
+                    section.classList.add('hidden');
+                });
+                
+                // Mostrar solo la sección correspondiente
+                const category = this.getAttribute('data-category');
+                document.getElementById(category).classList.remove('hidden');
+            });
+        });
+
+        // Inicializar animaciones
+        document.addEventListener('DOMContentLoaded', () => {
+            const items = document.querySelectorAll('.menu-item');
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

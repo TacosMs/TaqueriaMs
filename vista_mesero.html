@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taquería MS - Punto de Venta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Animaciones personalizadas */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .taco-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .add-to-order:active {
+            transform: scale(0.95);
+        }
+        .order-item {
+            transition: all 0.3s;
+        }
+        .order-item:hover {
+            background-color: #fef3c7;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        /* Switch entre vistas */
+        .hidden-view {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-yellow-500 text-white p-4 shadow-lg">
+        <h1 class="text-3xl font-bold text-center">Taquería MS 🌮</h1>
+        <div class="flex justify-center mt-2">
+            <button id="switch-to-waiter" class="bg-white text-yellow-600 px-4 py-1 rounded-l-lg font-bold">Mesero</button>
+            <button id="switch-to-kitchen" class="bg-gray-200 text-gray-700 px-4 py-1 rounded-r-lg font-bold">Cocina</button>
+        </div>
+    </header>
+
+    <!-- ===== VISTA MESERO ===== -->
+    <main id="waiter-view" class="container mx-auto p-4">
+        <!-- Menú de Tacos -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-yellow-800">Menú</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Taco al Pastor -->
+                <div class="taco-card bg-white rounded-lg shadow-md overflow-hidden hover:scale-105 transition-transform">
+                    <img src="https://images.unsplash.com/photo-1615870216519-2f9fa575fa5c?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80" alt="Taco al Pastor" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-xl text-yellow-700">Taco al Pastor</h3>
+                        <p class="text-gray-600">$15 c/u</p>
+                        <div class="mt-2">
+                            <label class="block text-sm text-gray-700">Personalizar:</label>
+                            <select class="custom-select mt-1 block w-full border rounded p-1">
+                                <option>Normal</option>
+                                <option>Sin cebolla</option>
+                                <option>Extra picante</option>
+                                <option>Sin cilantro</option>
+                            </select>
+                        </div>
+                        <button class="add-to-order mt-3 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 w-full transition-colors">
+                            Agregar a orden
+                        </button>
+                    </div>
+                </div>
+                <!-- Taco de Bistec -->
+                <div class="taco-card bg-white rounded-lg shadow-md overflow-hidden hover:scale-105 transition-transform">
+                    <img src="https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80" alt="Taco de Bistec" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-xl text-yellow-700">Taco de Bistec</h3>
+                        <p class="text-gray-600">$18 c/u</p>
+                        <div class="mt-2">
+                            <label class="block text-sm text-gray-700">Personalizar:</label>
+                            <select class="custom-select mt-1 block w-full border rounded p-1">
+                                <option>Normal</option>
+                                <option>Sin cebolla</option>
+                                <option>Con queso</option>
+                            </select>
+                        </div>
+                        <button class="add-to-order mt-3 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 w-full transition-colors">
+                            Agregar a orden
+                        </button>
+                    </div>
+                </div>
+                <!-- Más tacos... -->
+            </div>
+        </section>
+
+        <!-- Resumen de Orden -->
+        <section class="bg-white p-4 rounded-lg shadow-lg sticky bottom-0 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-yellow-800">Orden Actual</h2>
+            <div id="order-summary" class="mb-4 max-h-60 overflow-y-auto">
+                <p class="text-gray-500 italic">No hay items aún.</p>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-lg">Total: $<span id="total">0</span></span>
+                <button id="send-to-kitchen" class="bg-green-500 text-white py-2 px-6 rounded hover:bg-green-600 transition-colors">
+                    Enviar a cocina
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== VISTA COCINA ===== -->
+    <main id="kitchen-view" class="container mx-auto p-4 hidden-view">
+        <h2 class="text-2xl font-bold mb-6 text-yellow-800">Órdenes en Cocina 🍳</h2>
+        <div id="kitchen-orders" class="space-y-4">
+            <p class="text-gray-500 italic">No hay órdenes pendientes.</p>
+        </div>
+    </main>
+
+    <script>
+        // Variables globales
+        let orders = [];
+        let currentOrder = [];
+
+        // Elementos del DOM
+        const waiterView = document.getElementById('waiter-view');
+        const kitchenView = document.getElementById('kitchen-view');
+        const switchToWaiter = document.getElementById('switch-to-waiter');
+        const switchToKitchen = document.getElementById('switch-to-kitchen');
+        const orderSummary = document.getElementById('order-summary');
+        const totalElement = document.getElementById('total');
+        const sendToKitchenBtn = document.getElementById('send-to-kitchen');
+        const kitchenOrders = document.getElementById('kitchen-orders');
+
+        // Event Listeners
+        switchToWaiter.addEventListener('click', () => switchView('waiter'));
+        switchToKitchen.addEventListener('click', () => switchView('kitchen'));
+        sendToKitchenBtn.addEventListener('click', sendOrderToKitchen);
+
+        // Agregar tacos a la orden
+        document.querySelectorAll('.add-to-order').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const card = e.target.closest('.taco-card');
+                const tacoName = card.querySelector('h3').textContent;
+                const tacoPrice = parseInt(card.querySelector('p').textContent.replace(/\D/g, '')); // Extraer precio
+                const customOption = card.querySelector('select').value;
+
+                // Agregar a la orden actual
+                currentOrder.push({
+                    name: tacoName,
+                    price: tacoPrice,
+                    custom: customOption
+                });
+
+                updateOrderSummary();
+            });
+        });
+
+        // Funciones
+        function switchView(view) {
+            if (view === 'waiter') {
+                waiterView.classList.remove('hidden-view');
+                kitchenView.classList.add('hidden-view');
+                switchToWaiter.classList.remove('bg-gray-200', 'text-gray-700');
+                switchToWaiter.classList.add('bg-white', 'text-yellow-600');
+                switchToKitchen.classList.remove('bg-white', 'text-yellow-600');
+                switchToKitchen.classList.add('bg-gray-200', 'text-gray-700');
+            } else {
+                waiterView.classList.add('hidden-view');
+                kitchenView.classList.remove('hidden-view');
+                switchToWaiter.classList.add('bg-gray-200', 'text-gray-700');
+                switchToWaiter.classList.remove('bg-white', 'text-yellow-600');
+                switchToKitchen.classList.add('bg-white', 'text-yellow-600');
+                switchToKitchen.classList.remove('bg-gray-200', 'text-gray-700');
+                renderKitchenOrders();
+            }
+        }
+
+        function updateOrderSummary() {
+            orderSummary.innerHTML = '';
+            let total = 0;
+
+            if (currentOrder.length === 0) {
+                orderSummary.innerHTML = '<p class="text-gray-500 italic">No hay items aún.</p>';
+            } else {
+                currentOrder.forEach((item, index) => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'order-item mb-2 p-2 bg-gray-50 rounded flex justify-between';
+                    itemElement.innerHTML = `
+                        <div>
+                            <p class="font-semibold">${item.name}</p>
+                            <p class="text-sm text-gray-600">${item.custom}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">$${item.price}</span>
+                            <button onclick="removeItem(${index})" class="text-red-500 hover:text-red-700">
+                                ✕
+                            </button>
+                        </div>
+                    `;
+                    orderSummary.appendChild(itemElement);
+                    total += item.price;
+                });
+            }
+
+            totalElement.textContent = total;
+        }
+
+        function removeItem(index) {
+            currentOrder.splice(index, 1);
+            updateOrderSummary();
+        }
+
+        function sendOrderToKitchen() {
+            if (currentOrder.length === 0) {
+                alert('¡Agrega al menos un taco a la orden!');
+                return;
+            }
+
+            const orderId = Date.now(); // ID único (simulado)
+            orders.push({
+                id: orderId,
+                items: [...currentOrder],
+                status: 'pending',
+                timestamp: new Date().toLocaleTimeString()
+            });
+
+            currentOrder = [];
+            updateOrderSummary();
+            renderKitchenOrders();
+            alert('¡Orden enviada a cocina!');
+        }
+
+        function renderKitchenOrders() {
+            kitchenOrders.innerHTML = '';
+
+            if (orders.length === 0) {
+                kitchenOrders.innerHTML = '<p class="text-gray-500 italic">No hay órdenes pendientes.</p>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const orderElement = document.createElement('div');
+                orderElement.className = 'bg-white p-4 rounded-lg shadow-md pulse-animation';
+                orderElement.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-lg">Orden #${order.id.toString().slice(-4)}</h3>
+                        <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${order.status}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-2">Hora: ${order.timestamp}</p>
+                    <ul class="mb-3">
+                        ${order.items.map(item => `
+                            <li class="flex justify-between py-1 border-b">
+                                <span>${item.name} (${item.custom})</span>
+                                <span>$${item.price}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="flex justify-between font-bold">
+                        <span>Total:</span>
+                        <span>$${order.items.reduce((sum, item) => sum + item.price, 0)}</span>
+                    </div>
+                    <button onclick="markAsDone(${order.id})" class="mt-3 w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 transition-colors">
+                        Marcar como listo
+                    </button>
+                `;
+                kitchenOrders.appendChild(orderElement);
+            });
+        }
+
+        function markAsDone(orderId) {
+            const orderIndex = orders.findIndex(order => order.id === orderId);
+            if (orderIndex !== -1) {
+                orders[orderIndex].status = 'completed';
+                renderKitchenOrders();
+            }
+        }
+    </script>
+</body>
+</html>
