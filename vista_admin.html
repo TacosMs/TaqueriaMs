@@ -3,152 +3,1034 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taquería MS - Admin</title>
+    <title>Vista Gerente - Taquería MS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root {
+            --primary: #d97706;
+            --secondary: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .stats-card {
+            background: linear-gradient(145deg, #2d2d2d, #252525);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+        
+        .best-seller-card {
+            background: linear-gradient(145deg, #2d2d2d, #252525);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .best-seller-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-btn {
+            color: #777;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn.active {
+            color: var(--primary);
+        }
+        
+        .nav-btn.active svg {
+            fill: var(--primary);
+        }
+        
+        .chart-container {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .timeframe-btn {
+            background: #3d3d3d;
+            color: #aaa;
+            transition: all 0.3s;
+        }
+        
+        .timeframe-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(217, 119, 6, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+            }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Efecto de brillo al pasar el mouse */
+        .glow-on-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .glow-on-hover:hover {
+            box-shadow: 0 0 15px rgba(217, 119, 6, 0.5);
+        }
+        
+        /* Estilos para dispositivos más grandes */
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .best-sellers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Estilos para pantallas muy grandes */
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .best-sellers-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <!-- Sidebar + Nav -->
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <aside class="w-56 bg-yellow-600 text-white p-4 hidden md:block">
-            <h1 class="text-xl font-bold mb-6">Taquería MS</h1>
-            <nav>
-                <ul class="space-y-3">
-                    <li><button onclick="showSection('sales')" class="w-full text-left p-2 bg-yellow-700 rounded">📊 Ventas</button></li>
-                    <li><button onclick="showSection('payroll')" class="w-full text-left p-2 hover:bg-yellow-700 rounded">📝 Nóminas</button></li>
-                    <li><button onclick="showSection('inventory')" class="w-full text-left p-2 hover:bg-yellow-700 rounded">📦 Inventario</button></li>
-                </ul>
-            </nav>
-        </aside>
+<body class="min-h-screen pb-20">
+    <!-- Header -->
+    <div class="bg-black py-4 px-6 flex justify-between items-center sticky top-0 z-10">
+        <h1 class="text-xl font-bold text-amber-500">Taquería MS - Vista Gerente</h1>
+        <div class="flex items-center space-x-4">
+            <span class="text-sm bg-amber-600 px-3 py-1 rounded-full" id="current-date"></span>
+            <button class="text-white">
+                <i class="fas fa-bell"></i>
+            </button>
+        </div>
+    </div>
 
-        <!-- Contenido Principal -->
-        <main class="flex-1 p-4 overflow-y-auto">
-            <header class="bg-white p-3 rounded-lg shadow mb-4 md:hidden">
-                <select id="mobile-menu" class="w-full p-2 border rounded">
-                    <option value="sales">📊 Ventas</option>
-                    <option value="payroll">📝 Nóminas</option>
-                    <option value="inventory">📦 Inventario</option>
-                </select>
-            </header>
-
-            <!-- Sección Ventas -->
-            <section id="sales-section" class="admin-section">
-                <h2 class="text-2xl font-bold mb-4 text-yellow-800">Reporte de Ventas</h2>
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <canvas id="salesChart" height="200"></canvas>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h3 class="font-bold mb-2">Ventas Hoy</h3>
-                        <p class="text-3xl">$2,450</p>
+    <!-- Contenido principal -->
+    <div class="px-4 py-3">
+        <!-- Selector de período de tiempo -->
+        <div class="flex overflow-x-auto whitespace-nowrap space-x-2 mb-6 pb-2">
+            <button class="timeframe-btn px-4 py-2 rounded-full font-medium active" data-timeframe="hoy">Hoy</button>
+            <button class="timeframe-btn px-4 py-2 rounded-full font-medium" data-timeframe="semana">Esta Semana</button>
+            <button class="timeframe-btn px-4 py-2 rounded-full font-medium" data-timeframe="mes">Este Mes</button>
+            <button class="timeframe-btn px-4 py-2 rounded-full font-medium" data-timeframe="año">Este Año</button>
+            <button class="timeframe-btn px-4 py-2 rounded-full font-medium" data-timeframe="personalizado">Personalizado</button>
+        </div>
+        
+        <!-- Sección de estadísticas rápidas -->
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-chart-line text-amber-500 mr-2"></i> Resumen General
+        </h2>
+        <div class="grid grid-cols-1 gap-4 mb-6 stats-grid">
+            <!-- Tarjeta de Ventas Totales -->
+            <div class="stats-card p-5 glow-on-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-sm">Ventas Totales</p>
+                        <h3 class="text-2xl font-bold mt-1" id="total-sales">$0</h3>
+                        <p class="text-green-400 text-sm mt-2 flex items-center" id="sales-change">
+                            <i class="fas fa-caret-up mr-1"></i> 0%
+                        </p>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h3 class="font-bold mb-2">Tacos Más Vendidos</h3>
-                        <p>1. Pastor (120)</p>
-                        <p>2. Bistec (85)</p>
+                    <div class="bg-amber-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-dollar-sign text-amber-500 text-xl"></i>
                     </div>
                 </div>
-            </section>
+            </div>
+            
+            <!-- Tarjeta de Órdenes Totales -->
+            <div class="stats-card p-5 glow-on-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-sm">Órdenes Totales</p>
+                        <h3 class="text-2xl font-bold mt-1" id="total-orders">0</h3>
+                        <p class="text-green-400 text-sm mt-2 flex items-center" id="orders-change">
+                            <i class="fas fa-caret-up mr-1"></i> 0%
+                        </p>
+                    </div>
+                    <div class="bg-blue-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-clipboard-list text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tarjeta de Productos Vendidos -->
+            <div class="stats-card p-5 glow-on-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-sm">Productos Vendidos</p>
+                        <h3 class="text-2xl font-bold mt-1" id="total-products">0</h3>
+                        <p class="text-green-400 text-sm mt-2 flex items-center" id="products-change">
+                            <i class="fas fa-caret-up mr-1"></i> 0%
+                        </p>
+                    </div>
+                    <div class="bg-green-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-utensils text-green-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tarjeta de Mesa Promedio -->
+            <div class="stats-card p-5 glow-on-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-sm">Ticket Promedio</p>
+                        <h3 class="text-2xl font-bold mt-1" id="average-ticket">$0</h3>
+                        <p class="text-green-400 text-sm mt-2 flex items-center" id="ticket-change">
+                            <i class="fas fa-caret-up mr-1"></i> 0%
+                        </p>
+                    </div>
+                    <div class="bg-purple-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-receipt text-purple-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfico de Ventas -->
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-chart-bar text-amber-500 mr-2"></i> Tendencia de Ventas
+        </h2>
+        <div class="chart-container mb-6 glow-on-hover">
+            <canvas id="salesChart"></canvas>
+        </div>
+        
+        <!-- Sección de Productos Más Vendidos -->
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-medal text-amber-500 mr-2"></i> Productos Destacados
+        </h2>
+        <div class="grid grid-cols-1 gap-4 mb-6 best-sellers-grid">
+            <!-- Taco más vendido -->
+            <div class="best-seller-card p-5 glow-on-hover">
+                <div class="flex items-center mb-3">
+                    <div class="bg-amber-500 bg-opacity-20 p-2 rounded-full mr-3">
+                        <i class="fas fa-utensils text-amber-500"></i>
+                    </div>
+                    <h3 class="font-bold">Taco Más Vendido</h3>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-2xl font-bold" id="best-taco">-</p>
+                        <p class="text-gray-400 text-sm" id="best-taco-sales">0 vendidos</p>
+                    </div>
+                    <div class="bg-amber-500 text-white p-2 rounded-full floating">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Burrito más vendido -->
+            <div class="best-seller-card p-5 glow-on-hover">
+                <div class="flex items-center mb-3">
+                    <div class="bg-red-500 bg-opacity-20 p-2 rounded-full mr-3">
+                        <i class="fas fa-burrito text-red-500"></i>
+                    </div>
+                    <h3 class="font-bold">Burrito Más Vendido</h3>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-2xl font-bold" id="best-burrito">-</p>
+                        <p class="text-gray-400 text-sm" id="best-burrito-sales">0 vendidos</p>
+                    </div>
+                    <div class="bg-red-500 text-white p-2 rounded-full floating">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bebida más vendida -->
+            <div class="best-seller-card p-5 glow-on-hover">
+                <div class="flex items-center mb-3">
+                    <div class="bg-blue-500 bg-opacity-20 p-2 rounded-full mr-3">
+                        <i class="fas fa-glass-whiskey text-blue-500"></i>
+                    </div>
+                    <h3 class="font-bold">Bebida Más Vendida</h3>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-2xl font-bold" id="best-drink">-</p>
+                        <p class="text-gray-400 text-sm" id="best-drink-sales">0 vendidos</p>
+                    </div>
+                    <div class="bg-blue-500 text-white p-2 rounded-full floating">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfico de Distribución de Ventas -->
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-chart-pie text-amber-500 mr-2"></i> Distribución de Ventas
+        </h2>
+        <div class="chart-container mb-6 glow-on-hover">
+            <canvas id="categoryChart"></canvas>
+        </div>
+        
+        <!-- Tabla de Mesas con más ventas -->
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-table text-amber-500 mr-2"></i> Desempeño por Mesa
+        </h2>
+        <div class="bg-gray-800 rounded-lg overflow-hidden mb-6 glow-on-hover">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-700 text-left">
+                            <th class="py-3 px-4">Mesa</th>
+                            <th class="py-3 px-4">Órdenes</th>
+                            <th class="py-3 px-4">Ventas</th>
+                            <th class="py-3 px-4">Promedio</th>
+                            <th class="py-3 px-4">% Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tables-performance">
+                        <!-- Datos se llenarán con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Gráfico de Horario Pico -->
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-clock text-amber-500 mr-2"></i> Horario Pico
+        </h2>
+        <div class="chart-container mb-6 glow-on-hover">
+            <canvas id="peakHoursChart"></canvas>
+        </div>
+    </div>
 
-            <!-- Sección Nóminas -->
-            <section id="payroll-section" class="admin-section hidden-view">
-                <h2 class="text-2xl font-bold mb-4 text-yellow-800">Registro de Nóminas</h2>
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <form id="payroll-form">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <input type="text" placeholder="Nombre" class="p-2 border rounded" required>
-                            <input type="number" placeholder="Horas" class="p-2 border rounded" required>
-                            <input type="number" placeholder="Sueldo" class="p-2 border rounded" required>
-                        </div>
-                        <button type="submit" class="bg-yellow-500 text-white p-2 rounded">Guardar</button>
-                    </form>
-                </div>
-                <div class="bg-white p-4 rounded-lg shadow">
-                    <h3 class="font-bold mb-2">Nóminas Registradas</h3>
-                    <table class="w-full">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="p-2">Empleado</th>
-                                <th class="p-2">Horas</th>
-                                <th class="p-2">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="payroll-list">
-                            <tr>
-                                <td class="p-2 border-t">Juan Pérez</td>
-                                <td class="p-2 border-t">40</td>
-                                <td class="p-2 border-t">$2,400</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+    <!-- Barra inferior de navegación -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 flex justify-around py-3">
+        <button class="nav-btn flex flex-col items-center" data-tab="dashboard">
+            <i class="fas fa-chart-pie text-xl mb-1"></i>
+            <span class="text-xs">Dashboard</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center" data-tab="inventory">
+            <i class="fas fa-boxes text-xl mb-1"></i>
+            <span class="text-xs">Inventario</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center" data-tab="reports">
+            <i class="fas fa-file-alt text-xl mb-1"></i>
+            <span class="text-xs">Reportes</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center" data-tab="settings">
+            <i class="fas fa-cog text-xl mb-1"></i>
+            <span class="text-xs">Ajustes</span>
+        </button>
+    </div>
 
-            <!-- Sección Inventario -->
-            <section id="inventory-section" class="admin-section hidden-view">
-                <h2 class="text-2xl font-bold mb-4 text-yellow-800">Control de Inventario</h2>
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <form id="inventory-form">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                            <input type="text" placeholder="Producto" class="p-2 border rounded" required>
-                            <input type="number" placeholder="Cantidad" class="p-2 border rounded" required>
-                            <input type="text" placeholder="Proveedor" class="p-2 border rounded">
-                            <button type="submit" class="bg-yellow-500 text-white p-2 rounded">Agregar</button>
-                        </div>
-                    </form>
+    <!-- Modal para seleccionar rango de fechas -->
+    <div id="date-range-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 class="text-xl font-bold mb-4">Seleccionar Rango de Fechas</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Fecha Inicio</label>
+                    <input type="date" id="start-date" class="w-full bg-gray-700 rounded-lg p-2 text-white">
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow">
-                    <h3 class="font-bold mb-2">Inventario Actual</h3>
-                    <table class="w-full">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="p-2">Producto</th>
-                                <th class="p-2">Cantidad</th>
-                                <th class="p-2">Última actualización</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventory-list">
-                            <tr>
-                                <td class="p-2 border-t">Tortillas</td>
-                                <td class="p-2 border-t">200</td>
-                                <td class="p-2 border-t">05/05/2024</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Fecha Fin</label>
+                    <input type="date" id="end-date" class="w-full bg-gray-700 rounded-lg p-2 text-white">
                 </div>
-            </section>
-        </main>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancel-date-range" class="bg-gray-700 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                <button id="apply-date-range" class="bg-amber-600 text-white px-4 py-2 rounded-lg">Aplicar</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Mostrar secciones
-        function showSection(sectionId) {
-            document.querySelectorAll('.admin-section').forEach(section => {
-                section.classList.add('hidden-view');
-            });
-            document.getElementById(`${sectionId}-section`).classList.remove('hidden-view');
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi4WBHRGgXMp_rtPvV9IDw3foEjtr0L2o",
+            authDomain: "tacosms-acbb2.firebaseapp.com",
+            databaseURL: "https://tacosms-acbb2-default-rtdb.firebaseio.com",
+            projectId: "tacosms-acbb2",
+            storageBucket: "tacosms-acbb2.appspot.com",
+            messagingSenderId: "701143542092",
+            appId: "1:701143542092:web:29f1d59ffe2751a3c207e9"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Variables para los gráficos
+        let salesChart, categoryChart, peakHoursChart;
+        
+        // Estado de la aplicación
+        const appState = {
+            currentTimeframe: 'hoy',
+            startDate: null,
+            endDate: null,
+            ordersData: [],
+            previousData: [],
+            bestSellers: {
+                tacos: {},
+                burritos: {},
+                bebidas: {}
+            }
+        };
+
+        // Función para formatear dinero
+        function formatMoney(amount) {
+            return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
         }
 
-        // Menú móvil
-        document.getElementById('mobile-menu').addEventListener('change', (e) => {
-            showSection(e.target.value);
-        });
+        // Función para formatear fecha
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('es-MX', options);
+        }
 
-        // Gráfica de ventas (simulada)
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
+        // Función para obtener la fecha actual formateada
+        function updateCurrentDate() {
+            document.getElementById('current-date').textContent = formatDate(new Date());
+        }
+
+        // Función para calcular el rango de fechas según el timeframe
+        function getDateRange(timeframe) {
+            const now = new Date();
+            let start, end = new Date(now);
+            
+            switch(timeframe) {
+                case 'hoy':
+                    start = new Date(now);
+                    start.setHours(0, 0, 0, 0);
+                    break;
+                case 'semana':
+                    start = new Date(now);
+                    start.setDate(now.getDate() - now.getDay()); // Domingo de esta semana
+                    start.setHours(0, 0, 0, 0);
+                    break;
+                case 'mes':
+                    start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    break;
+                case 'año':
+                    start = new Date(now.getFullYear(), 0, 1);
+                    break;
+                case 'personalizado':
+                    return {
+                        start: appState.startDate,
+                        end: appState.endDate
+                    };
+                default:
+                    start = new Date(now);
+                    start.setHours(0, 0, 0, 0);
+            }
+            
+            return { start, end };
+        }
+
+        // Función para cargar datos de Firebase
+        async function loadData(timeframe) {
+            const { start, end } = getDateRange(timeframe);
+            appState.currentTimeframe = timeframe;
+            
+            // Actualizar botones de timeframe
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.timeframe === timeframe) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Mostrar loading
+            showLoading();
+            
+            try {
+                // Obtener datos del período actual
+                const currentData = await fetchOrdersData(start, end);
+                appState.ordersData = currentData;
+                
+                // Obtener datos del período anterior para comparación
+                let previousStart, previousEnd;
+                
+                if (timeframe === 'hoy') {
+                    previousStart = new Date(start);
+                    previousStart.setDate(start.getDate() - 1);
+                    previousEnd = new Date(end);
+                    previousEnd.setDate(end.getDate() - 1);
+                } else if (timeframe === 'semana') {
+                    previousStart = new Date(start);
+                    previousStart.setDate(start.getDate() - 7);
+                    previousEnd = new Date(end);
+                    previousEnd.setDate(end.getDate() - 7);
+                } else if (timeframe === 'mes') {
+                    previousStart = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+                    previousEnd = new Date(end.getFullYear(), end.getMonth(), 0);
+                } else if (timeframe === 'año') {
+                    previousStart = new Date(start.getFullYear() - 1, 0, 1);
+                    previousEnd = new Date(start.getFullYear() - 1, 11, 31);
+                }
+                
+                if (timeframe !== 'personalizado') {
+                    const previousData = await fetchOrdersData(previousStart, previousEnd);
+                    appState.previousData = previousData;
+                }
+                
+                // Procesar datos y actualizar UI
+                processDataAndUpdateUI();
+                
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                alert('Error al cargar datos. Por favor intente nuevamente.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Función para obtener datos de órdenes de Firebase
+        async function fetchOrdersData(startDate, endDate) {
+            // Convertir fechas a formato YYYY-MM-DD
+            const startStr = startDate.toISOString().split('T')[0];
+            const endStr = endDate.toISOString().split('T')[0];
+            
+            // Obtener todos los datos de órdenes
+            const snapshot = await database.ref('orders').once('value');
+            const ordersData = snapshot.val();
+            
+            // Filtrar órdenes por rango de fechas
+            const filteredOrders = [];
+            
+            if (ordersData) {
+                Object.keys(ordersData).forEach(date => {
+                    // Verificar si la fecha está dentro del rango
+                    if (date >= startStr && date <= endStr) {
+                        const ordersForDate = ordersData[date];
+                        
+                        Object.keys(ordersForDate).forEach(orderId => {
+                            const order = ordersForDate[orderId];
+                            filteredOrders.push({
+                                ...order,
+                                date: date,
+                                orderId: orderId
+                            });
+                        });
+                    }
+                });
+            }
+            
+            return filteredOrders;
+        }
+
+        // Función para procesar datos y actualizar la UI
+        function processDataAndUpdateUI() {
+            const orders = appState.ordersData;
+            const previousOrders = appState.previousData;
+            
+            // Calcular estadísticas básicas
+            const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
+            const totalOrders = orders.length;
+            const totalProducts = orders.reduce((sum, order) => sum + order.items.length, 0);
+            const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
+            
+            // Calcular estadísticas del período anterior para comparación
+            let previousTotalSales = 0;
+            let previousTotalOrders = 0;
+            let previousTotalProducts = 0;
+            let previousAverageTicket = 0;
+            
+            if (previousOrders.length > 0) {
+                previousTotalSales = previousOrders.reduce((sum, order) => sum + order.total, 0);
+                previousTotalOrders = previousOrders.length;
+                previousTotalProducts = previousOrders.reduce((sum, order) => sum + order.items.length, 0);
+                previousAverageTicket = previousTotalOrders > 0 ? previousTotalSales / previousTotalOrders : 0;
+            }
+            
+            // Calcular porcentajes de cambio
+            const salesChange = previousTotalSales > 0 ? 
+                ((totalSales - previousTotalSales) / previousTotalSales * 100).toFixed(1) : 100;
+            const ordersChange = previousTotalOrders > 0 ? 
+                ((totalOrders - previousTotalOrders) / previousTotalOrders * 100).toFixed(1) : 100;
+            const productsChange = previousTotalProducts > 0 ? 
+                ((totalProducts - previousTotalProducts) / previousTotalProducts * 100).toFixed(1) : 100;
+            const ticketChange = previousAverageTicket > 0 ? 
+                ((averageTicket - previousAverageTicket) / previousAverageTicket * 100).toFixed(1) : 100;
+            
+            // Actualizar tarjetas de estadísticas
+            document.getElementById('total-sales').textContent = formatMoney(totalSales);
+            document.getElementById('total-orders').textContent = totalOrders;
+            document.getElementById('total-products').textContent = totalProducts;
+            document.getElementById('average-ticket').textContent = formatMoney(averageTicket);
+            
+            // Actualizar porcentajes de cambio
+            updateChangeIndicator('sales-change', salesChange);
+            updateChangeIndicator('orders-change', ordersChange);
+            updateChangeIndicator('products-change', productsChange);
+            updateChangeIndicator('ticket-change', ticketChange);
+            
+            // Procesar productos más vendidos
+            processBestSellers(orders);
+            
+            // Procesar datos para gráficos
+            processChartData(orders);
+            
+            // Procesar desempeño por mesas
+            processTablesPerformance(orders, totalSales);
+        }
+
+        // Función para actualizar indicadores de cambio
+        function updateChangeIndicator(elementId, changePercent) {
+            const element = document.getElementById(elementId);
+            const change = parseFloat(changePercent);
+            
+            if (change > 0) {
+                element.innerHTML = `<i class="fas fa-caret-up mr-1"></i> ${Math.abs(change)}%`;
+                element.className = 'text-green-400 text-sm mt-2 flex items-center';
+            } else if (change < 0) {
+                element.innerHTML = `<i class="fas fa-caret-down mr-1"></i> ${Math.abs(change)}%`;
+                element.className = 'text-red-400 text-sm mt-2 flex items-center';
+            } else {
+                element.innerHTML = `<i class="fas fa-equals mr-1"></i> 0%`;
+                element.className = 'text-gray-400 text-sm mt-2 flex items-center';
+            }
+        }
+
+        // Función para procesar productos más vendidos
+        function processBestSellers(orders) {
+            // Resetear contadores
+            appState.bestSellers = {
+                tacos: {},
+                burritos: {},
+                bebidas: {}
+            };
+            
+            // Contar productos vendidos
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    let category;
+                    
+                    // Determinar categoría del producto
+                    if (item.name.toLowerCase().includes('taco') || item.name.toLowerCase().includes('tacos')) {
+                        category = 'tacos';
+                    } else if (item.name.toLowerCase().includes('burrito')) {
+                        category = 'burritos';
+                    } else {
+                        category = 'bebidas';
+                    }
+                    
+                    // Incrementar contador
+                    if (!appState.bestSellers[category][item.name]) {
+                        appState.bestSellers[category][item.name] = {
+                            count: 1,
+                            price: item.price
+                        };
+                    } else {
+                        appState.bestSellers[category][item.name].count++;
+                    }
+                });
+            });
+            
+            // Encontrar los más vendidos de cada categoría
+            const bestTaco = findBestSeller('tacos');
+            const bestBurrito = findBestSeller('burritos');
+            const bestDrink = findBestSeller('bebidas');
+            
+            // Actualizar UI
+            document.getElementById('best-taco').textContent = bestTaco.name || '-';
+            document.getElementById('best-taco-sales').textContent = bestTaco.count ? `${bestTaco.count} vendidos` : '0 vendidos';
+            
+            document.getElementById('best-burrito').textContent = bestBurrito.name || '-';
+            document.getElementById('best-burrito-sales').textContent = bestBurrito.count ? `${bestBurrito.count} vendidos` : '0 vendidos';
+            
+            document.getElementById('best-drink').textContent = bestDrink.name || '-';
+            document.getElementById('best-drink-sales').textContent = bestDrink.count ? `${bestDrink.count} vendidos` : '0 vendidos';
+        }
+
+        // Función para encontrar el producto más vendido en una categoría
+        function findBestSeller(category) {
+            const sellers = appState.bestSellers[category];
+            let bestSeller = { name: null, count: 0 };
+            
+            Object.keys(sellers).forEach(name => {
+                if (sellers[name].count > bestSeller.count) {
+                    bestSeller = {
+                        name: name,
+                        count: sellers[name].count,
+                        price: sellers[name].price
+                    };
+                }
+            });
+            
+            return bestSeller;
+        }
+
+        // Función para procesar datos para gráficos
+        function processChartData(orders) {
+            // Datos para gráfico de ventas por día
+            const salesByDay = {};
+            const ordersByDay = {};
+            
+            // Datos para gráfico de categorías
+            const salesByCategory = {
+                tacos: 0,
+                burritos: 0,
+                bebidas: 0
+            };
+            
+            // Datos para gráfico de horas pico
+            const ordersByHour = Array(24).fill(0);
+            
+            orders.forEach(order => {
+                // Procesar por día
+                const orderDate = new Date(order.date);
+                const dayKey = orderDate.toLocaleDateString('es-MX', { weekday: 'short' });
+                
+                if (!salesByDay[dayKey]) {
+                    salesByDay[dayKey] = 0;
+                    ordersByDay[dayKey] = 0;
+                }
+                
+                salesByDay[dayKey] += order.total;
+                ordersByDay[dayKey]++;
+                
+                // Procesar por categoría
+                order.items.forEach(item => {
+                    if (item.name.toLowerCase().includes('taco') || item.name.toLowerCase().includes('tacos')) {
+                        salesByCategory.tacos += item.price;
+                    } else if (item.name.toLowerCase().includes('burrito')) {
+                        salesByCategory.burritos += item.price;
+                    } else {
+                        salesByCategory.bebidas += item.price;
+                    }
+                });
+                
+                // Procesar por hora
+                const timestamp = order.timestamp;
+                if (timestamp) {
+                    const orderTime = new Date(timestamp);
+                    const hour = orderTime.getHours();
+                    ordersByHour[hour]++;
+                }
+            });
+            
+            // Actualizar gráficos
+            updateSalesChart(Object.keys(salesByDay), Object.values(salesByDay));
+            updateCategoryChart(Object.keys(salesByCategory), Object.values(salesByCategory));
+            updatePeakHoursChart(ordersByHour);
+        }
+
+        // Función para actualizar gráfico de ventas
+        function updateSalesChart(labels, data) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            // Destruir gráfico anterior si existe
+            if (salesChart) {
+                salesChart.destroy();
+            }
+            
+            salesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventas',
+                        data: data,
+                        backgroundColor: 'rgba(217, 119, 6, 0.7)',
+                        borderColor: 'rgba(217, 119, 6, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatMoney(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatMoney(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para actualizar gráfico de categorías
+        function updateCategoryChart(labels, data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const backgroundColors = [
+                'rgba(217, 119, 6, 0.7)',  // Ámbar para tacos
+                'rgba(220, 38, 38, 0.7)',  // Rojo para burritos
+                'rgba(59, 130, 246, 0.7)'  // Azul para bebidas
+            ];
+            
+            // Destruir gráfico anterior si existe
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${formatMoney(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para actualizar gráfico de horas pico
+        function updatePeakHoursChart(data) {
+            const ctx = document.getElementById('peakHoursChart').getContext('2d');
+            const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+            
+            // Destruir gráfico anterior si existe
+            if (peakHoursChart)         peakHoursChart = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                labels: labels,
                 datasets: [{
-                    label: 'Ventas $',
-                    data: [1200, 1900, 1500, 2000, 2450, 3000],
-                    backgroundColor: '#F59E0B'
+                    label: 'Órdenes por hora',
+                    data: data,
+                    backgroundColor: 'rgba(217, 119, 6, 0.2)',
+                    borderColor: 'rgba(217, 119, 6, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
                 }]
             },
-            options: { responsive: true }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
         });
-    </script>
+    }
+
+    // Función para procesar desempeño por mesas
+    function processTablesPerformance(orders, totalSales) {
+        const tablesData = {};
+        
+        // Contar órdenes y ventas por mesa
+        orders.forEach(order => {
+            const table = order.table || 'Takeout';
+            
+            if (!tablesData[table]) {
+                tablesData[table] = {
+                    orders: 0,
+                    sales: 0
+                };
+            }
+            
+            tablesData[table].orders++;
+            tablesData[table].sales += order.total;
+        });
+        
+        // Calcular promedios y porcentajes
+        const tablesArray = Object.keys(tablesData).map(table => {
+            const data = tablesData[table];
+            const average = data.orders > 0 ? data.sales / data.orders : 0;
+            const percentage = totalSales > 0 ? (data.sales / totalSales * 100) : 0;
+            
+            return {
+                table,
+                orders: data.orders,
+                sales: data.sales,
+                average,
+                percentage
+            };
+        });
+        
+        // Ordenar por ventas descendentes
+        tablesArray.sort((a, b) => b.sales - a.sales);
+        
+        // Actualizar tabla en la UI
+        updateTablesPerformanceUI(tablesArray);
+    }
+
+    // Función para actualizar la tabla de desempeño de mesas
+    function updateTablesPerformanceUI(tablesData) {
+        const tbody = document.getElementById('tables-performance');
+        tbody.innerHTML = '';
+        
+        tablesData.forEach(data => {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-gray-700 hover:bg-gray-700';
+            
+            row.innerHTML = `
+                <td class="py-3 px-4 font-medium">${data.table}</td>
+                <td class="py-3 px-4">${data.orders}</td>
+                <td class="py-3 px-4">${formatMoney(data.sales)}</td>
+                <td class="py-3 px-4">${formatMoney(data.average)}</td>
+                <td class="py-3 px-4">
+                    <div class="w-full bg-gray-600 rounded-full h-2">
+                        <div class="bg-amber-500 h-2 rounded-full" style="width: ${data.percentage}%"></div>
+                    </div>
+                    <span class="text-xs">${data.percentage.toFixed(1)}%</span>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    // Función para mostrar estado de carga
+    function showLoading() {
+        // Implementar lógica de loading si es necesario
+    }
+
+    // Función para ocultar estado de carga
+    function hideLoading() {
+        // Implementar lógica de loading si es necesario
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        // Actualizar fecha actual
+        updateCurrentDate();
+        
+        // Cargar datos iniciales (hoy)
+        loadData('hoy');
+        
+        // Configurar event listeners para los botones de timeframe
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const timeframe = btn.dataset.timeframe;
+                
+                if (timeframe === 'personalizado') {
+                    document.getElementById('date-range-modal').classList.remove('hidden');
+                } else {
+                    loadData(timeframe);
+                }
+            });
+        });
+        
+        // Configurar event listeners para el modal de rango de fechas
+        document.getElementById('cancel-date-range').addEventListener('click', () => {
+            document.getElementById('date-range-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('apply-date-range').addEventListener('click', () => {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            if (startDate && endDate) {
+                appState.startDate = new Date(startDate);
+                appState.endDate = new Date(endDate);
+                appState.currentTimeframe = 'personalizado';
+                
+                document.getElementById('date-range-modal').classList.add('hidden');
+                loadData('personalizado');
+            } else {
+                alert('Por favor seleccione ambas fechas');
+            }
+        });
+        
+        // Configurar event listeners para la barra de navegación inferior
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Aquí iría la lógica para cambiar de vista
+            });
+        });
+    });
+
+    // Configurar el primer botón de navegación como activo
+    document.querySelector('.nav-btn[data-tab="dashboard"]').classList.add('active');
+</script>
 </body>
 </html>
