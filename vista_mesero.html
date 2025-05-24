@@ -3,280 +3,930 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taquería MS - Punto de Venta</title>
+    <title>Vista Mesero - Taquería MS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        /* Animaciones personalizadas */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        :root {
+            --primary: #d97706;
+            --secondary: #f59e0b;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
         }
-        .taco-card {
-            animation: fadeIn 0.5s ease-out;
+        
+        .item-card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            transition: all 0.3s ease;
         }
-        .add-to-order:active {
-            transform: scale(0.95);
+        
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
-        .order-item {
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            background: #3d3d3d;
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+        
+        .quantity-btn {
+            background: #4d4d4d;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quantity-btn:hover {
+            background: var(--primary);
+        }
+        
+        .option-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #555;
+            border-radius: 4px;
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .option-checkbox:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .option-checkbox:checked::after {
+            content: "✓";
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .nav-btn {
+            color: #777;
             transition: all 0.3s;
         }
-        .order-item:hover {
-            background-color: #fef3c7;
+        
+        .nav-btn.active {
+            color: var(--primary);
         }
-        .pulse-animation {
-            animation: pulse 2s infinite;
+        
+        .nav-btn.active svg {
+            fill: var(--primary);
         }
-        /* Switch entre vistas */
-        .hidden-view {
-            display: none;
+        
+        .add-to-order-btn {
+            background: var(--primary);
+            transition: all 0.3s;
+        }
+        
+        .add-to-order-btn:hover {
+            background: #b65c04;
+            transform: translateY(-2px);
+        }
+        
+        .category-btn.active {
+            background-color: var(--primary);
+        }
+        
+        .table-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .table-btn.active {
+            background-color: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .table-btn.has-order {
+            background-color: #3d3d3d;
+            border: 2px solid var(--primary);
+        }
+        
+        .order-item {
+            border-bottom: 1px solid #3d3d3d;
+            padding: 12px 0;
+        }
+        
+        /* Estilos para dispositivos más grandes */
+        @media (min-width: 768px) {
+            #product-list, #tables-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .item-card {
+                max-width: 100%;
+            }
+        }
+        
+        /* Estilos para pantallas muy grandes */
+        @media (min-width: 1024px) {
+            #product-list, #tables-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="min-h-screen pb-20">
     <!-- Header -->
-    <header class="bg-yellow-500 text-white p-4 shadow-lg">
-        <h1 class="text-3xl font-bold text-center">Taquería MS 🌮</h1>
-        <div class="flex justify-center mt-2">
-            <button id="switch-to-waiter" class="bg-white text-yellow-600 px-4 py-1 rounded-l-lg font-bold">Mesero</button>
-            <button id="switch-to-kitchen" class="bg-gray-200 text-gray-700 px-4 py-1 rounded-r-lg font-bold">Cocina</button>
+    <div class="bg-black py-4 px-6 flex justify-between items-center sticky top-0 z-10">
+        <h1 class="text-xl font-bold text-amber-500">Taquería MS</h1>
+        <div class="flex items-center space-x-4">
+            <span id="current-table" class="text-sm bg-amber-600 px-3 py-1 rounded-full">Seleccione mesa</span>
+            <button class="text-white">
+                <i class="fas fa-bell"></i>
+            </button>
         </div>
-    </header>
+    </div>
 
-    <!-- ===== VISTA MESERO ===== -->
-    <main id="waiter-view" class="container mx-auto p-4">
-        <!-- Menú de Tacos -->
-        <section class="mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-yellow-800">Menú</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <!-- Taco al Pastor -->
-                <div class="taco-card bg-white rounded-lg shadow-md overflow-hidden hover:scale-105 transition-transform">
-                    <img src="https://images.unsplash.com/photo-1615870216519-2f9fa575fa5c?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80" alt="Taco al Pastor" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="font-bold text-xl text-yellow-700">Taco al Pastor</h3>
-                        <p class="text-gray-600">$15 c/u</p>
-                        <div class="mt-2">
-                            <label class="block text-sm text-gray-700">Personalizar:</label>
-                            <select class="custom-select mt-1 block w-full border rounded p-1">
-                                <option>Normal</option>
-                                <option>Sin cebolla</option>
-                                <option>Extra picante</option>
-                                <option>Sin cilantro</option>
-                            </select>
-                        </div>
-                        <button class="add-to-order mt-3 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 w-full transition-colors">
-                            Agregar a orden
-                        </button>
-                    </div>
+    <!-- Contenido principal (se cambia según la pestaña) -->
+    <div id="main-content">
+        <!-- Contenido del Menú (se muestra por defecto) -->
+        <div id="menu-content">
+            <!-- Categorías -->
+            <div class="px-4 py-3 overflow-x-auto whitespace-nowrap">
+                <div class="inline-flex space-x-3">
+                    <button class="category-btn px-4 py-2 rounded-full bg-gray-700 text-white font-medium" data-category="tacos">Tacos</button>
+                    <button class="category-btn px-4 py-2 rounded-full bg-gray-700 text-white font-medium" data-category="burritos">Burritos</button>
+                    <button class="category-btn px-4 py-2 rounded-full bg-gray-700 text-white font-medium" data-category="bebidas">Bebidas</button>
                 </div>
-                <!-- Taco de Bistec -->
-                <div class="taco-card bg-white rounded-lg shadow-md overflow-hidden hover:scale-105 transition-transform">
-                    <img src="https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80" alt="Taco de Bistec" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="font-bold text-xl text-yellow-700">Taco de Bistec</h3>
-                        <p class="text-gray-600">$18 c/u</p>
-                        <div class="mt-2">
-                            <label class="block text-sm text-gray-700">Personalizar:</label>
-                            <select class="custom-select mt-1 block w-full border rounded p-1">
-                                <option>Normal</option>
-                                <option>Sin cebolla</option>
-                                <option>Con queso</option>
-                            </select>
-                        </div>
-                        <button class="add-to-order mt-3 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 w-full transition-colors">
-                            Agregar a orden
-                        </button>
-                    </div>
-                </div>
-                <!-- Más tacos... -->
             </div>
-        </section>
 
-        <!-- Resumen de Orden -->
-        <section class="bg-white p-4 rounded-lg shadow-lg sticky bottom-0 mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-yellow-800">Orden Actual</h2>
-            <div id="order-summary" class="mb-4 max-h-60 overflow-y-auto">
-                <p class="text-gray-500 italic">No hay items aún.</p>
+            <!-- Lista de Productos -->
+            <div class="px-4 py-3 grid grid-cols-1 gap-4" id="product-list">
+                <!-- Los productos se generarán dinámicamente con JavaScript -->
             </div>
-            <div class="flex justify-between items-center">
-                <span class="font-bold text-lg">Total: $<span id="total">0</span></span>
-                <button id="send-to-kitchen" class="bg-green-500 text-white py-2 px-6 rounded hover:bg-green-600 transition-colors">
-                    Enviar a cocina
+
+            <!-- Botón flotante para agregar al pedido -->
+            <div class="fixed bottom-20 right-4">
+                <button class="add-to-order-btn rounded-full p-4 shadow-lg">
+                    <i class="fas fa-plus text-white text-xl"></i>
                 </button>
             </div>
-        </section>
-    </main>
-
-    <!-- ===== VISTA COCINA ===== -->
-    <main id="kitchen-view" class="container mx-auto p-4 hidden-view">
-        <h2 class="text-2xl font-bold mb-6 text-yellow-800">Órdenes en Cocina 🍳</h2>
-        <div id="kitchen-orders" class="space-y-4">
-            <p class="text-gray-500 italic">No hay órdenes pendientes.</p>
         </div>
-    </main>
+
+        <!-- Contenido de Órdenes (oculto inicialmente) -->
+        <div id="orders-content" class="hidden px-4 py-3">
+            <h2 class="text-2xl font-bold mb-4">Órdenes Activas</h2>
+            <div id="active-orders-list">
+                <!-- Las órdenes activas se mostrarán aquí -->
+            </div>
+        </div>
+
+        <!-- Contenido de Cuenta (oculto inicialmente) -->
+        <div id="bill-content" class="hidden px-4 py-3">
+            <h2 class="text-2xl font-bold mb-4">Cuenta de Mesa</h2>
+            <div id="bill-details">
+                <!-- Los detalles de la cuenta se mostrarán aquí -->
+            </div>
+        </div>
+
+        <!-- Contenido de Ajustes (oculto inicialmente) -->
+        <div id="settings-content" class="hidden px-4 py-3">
+            <h2 class="text-2xl font-bold mb-4">Ajustes</h2>
+            <p class="text-gray-400">Configuración de la aplicación</p>
+        </div>
+    </div>
+
+    <!-- Modal para seleccionar mesa -->
+    <div id="table-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 class="text-xl font-bold mb-4">Seleccionar Mesa</h2>
+            <div class="grid grid-cols-3 gap-4" id="tables-container">
+                <!-- Las mesas se generarán dinámicamente -->
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button id="confirm-table-btn" class="bg-amber-600 text-white px-4 py-2 rounded-lg">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra inferior de navegación -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 flex justify-around py-3">
+        <button class="nav-btn active flex flex-col items-center" data-tab="menu">
+            <i class="fas fa-utensils text-xl mb-1"></i>
+            <span class="text-xs">Menú</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center" data-tab="orders">
+            <i class="fas fa-clipboard-list text-xl mb-1"></i>
+            <span class="text-xs">Órdenes</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center" data-tab="bill">
+            <i class="fas fa-cash-register text-xl mb-1"></i>
+            <span class="text-xs">Cuenta</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center" data-tab="settings">
+            <i class="fas fa-cog text-xl mb-1"></i>
+            <span class="text-xs">Ajustes</span>
+        </button>
+    </div>
 
     <script>
-        // Variables globales
-        let orders = [];
-        let currentOrder = [];
+        // Configuración de jsPDF
+        const { jsPDF } = window.jspdf;
 
-        // Elementos del DOM
-        const waiterView = document.getElementById('waiter-view');
-        const kitchenView = document.getElementById('kitchen-view');
-        const switchToWaiter = document.getElementById('switch-to-waiter');
-        const switchToKitchen = document.getElementById('switch-to-kitchen');
-        const orderSummary = document.getElementById('order-summary');
-        const totalElement = document.getElementById('total');
-        const sendToKitchenBtn = document.getElementById('send-to-kitchen');
-        const kitchenOrders = document.getElementById('kitchen-orders');
+        // Datos del menú
+        const menuItems = {
+            tacos: [
+                { id: 1, name: "Bistec", price: 30, description: "Delicioso bistec de res a la plancha, bien sazonado" },
+                { id: 2, name: "Longaniza", price: 30, description: "Longaniza roja con un toque picosito" },
+                { id: 3, name: "Taco Campechano", price: 30, description: "Mezcla de bistec y longaniza" },
+                { id: 4, name: "Chuleta", price: 30, description: "Carne de chuleta con un dorado crujiente" },
+                { id: 5, name: "Enchilada", price: 30, description: "Carne de cerdo marinada en chile rojo" },
+                { id: 6, name: "Hawaiano", price: 32, description: "Bistec acompañado de piña dorada" },
+                { id: 7, name: "Alambre", price: 32, description: "Bistec con tocino, cebolla, pimientos y queso" }
+            ],
+            burritos: [
+                { id: 8, name: "Burrito de Bistec", price: 48, description: "Bistec de res jugoso en tortilla de harina" },
+                { id: 9, name: "Burrito de Longaniza", price: 48, description: "Longaniza bien dorada y picosita" },
+                { id: 10, name: "Burrito Campechano", price: 48, description: "Mezcla de bistec y longaniza en tortilla" },
+                { id: 11, name: "Burrito de Chuleta", price: 48, description: "Chuleta de cerdo a la plancha" },
+                { id: 12, name: "Burrito de Enchilada", price: 48, description: "Carne adobada al estilo enchilado" },
+                { id: 13, name: "Burrito de Alambre", price: 47, description: "Bistec, tocino, cebolla, pimientos y queso" },
+                { id: 14, name: "Burrito Supremo", price: 75, description: "El rey de los burritos con 7 ingredientes" }
+            ],
+            bebidas: [
+                { id: 15, name: "7UP", price: 25, description: "Refresco de limón-lima sin cafeína" },
+                { id: 16, name: "Manzanita", price: 25, description: "Refresco de manzana con sabor dulce" },
+                { id: 17, name: "Sangría Señorial", price: 25, description: "Refresco con sabor a uva y toques especiados" },
+                { id: 18, name: "Mirinda", price: 25, description: "Sabor a naranja intenso y dulce" },
+                { id: 19, name: "Squirt", price: 25, description: "Refresco de toronja con toque ácido" },
+                { id: 20, name: "Pepsi", price: 25, description: "Refresco de cola con sabor dulce" }
+            ]
+        };
 
-        // Event Listeners
-        switchToWaiter.addEventListener('click', () => switchView('waiter'));
-        switchToKitchen.addEventListener('click', () => switchView('kitchen'));
-        sendToKitchenBtn.addEventListener('click', sendOrderToKitchen);
+        // Estado de la aplicación
+        const appState = {
+            currentTable: null,
+            orders: {},
+            currentOrder: []
+        };
 
-        // Agregar tacos a la orden
-        document.querySelectorAll('.add-to-order').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const card = e.target.closest('.taco-card');
-                const tacoName = card.querySelector('h3').textContent;
-                const tacoPrice = parseInt(card.querySelector('p').textContent.replace(/\D/g, '')); // Extraer precio
-                const customOption = card.querySelector('select').value;
-
-                // Agregar a la orden actual
-                currentOrder.push({
-                    name: tacoName,
-                    price: tacoPrice,
-                    custom: customOption
-                });
-
-                updateOrderSummary();
-            });
-        });
-
-        // Funciones
-        function switchView(view) {
-            if (view === 'waiter') {
-                waiterView.classList.remove('hidden-view');
-                kitchenView.classList.add('hidden-view');
-                switchToWaiter.classList.remove('bg-gray-200', 'text-gray-700');
-                switchToWaiter.classList.add('bg-white', 'text-yellow-600');
-                switchToKitchen.classList.remove('bg-white', 'text-yellow-600');
-                switchToKitchen.classList.add('bg-gray-200', 'text-gray-700');
-            } else {
-                waiterView.classList.add('hidden-view');
-                kitchenView.classList.remove('hidden-view');
-                switchToWaiter.classList.add('bg-gray-200', 'text-gray-700');
-                switchToWaiter.classList.remove('bg-white', 'text-yellow-600');
-                switchToKitchen.classList.add('bg-white', 'text-yellow-600');
-                switchToKitchen.classList.remove('bg-gray-200', 'text-gray-700');
-                renderKitchenOrders();
+        // Función para generar el ícono según la categoría
+        function getCategoryIcon(category) {
+            switch(category) {
+                case 'tacos':
+                    return '<i class="fas fa-utensils text-4xl text-amber-500 p-2 bg-gray-700 rounded-lg"></i>';
+                case 'burritos':
+                    return '<i class="fas fa-burrito text-4xl text-amber-500 p-2 bg-gray-700 rounded-lg"></i>';
+                case 'bebidas':
+                    return '<i class="fas fa-glass-whiskey text-4xl text-amber-500 p-2 bg-gray-700 rounded-lg"></i>';
+                default:
+                    return '<i class="fas fa-question text-4xl text-amber-500 p-2 bg-gray-700 rounded-lg"></i>';
             }
         }
 
-        function updateOrderSummary() {
-            orderSummary.innerHTML = '';
-            let total = 0;
-
-            if (currentOrder.length === 0) {
-                orderSummary.innerHTML = '<p class="text-gray-500 italic">No hay items aún.</p>';
-            } else {
-                currentOrder.forEach((item, index) => {
-                    const itemElement = document.createElement('div');
-                    itemElement.className = 'order-item mb-2 p-2 bg-gray-50 rounded flex justify-between';
-                    itemElement.innerHTML = `
-                        <div>
-                            <p class="font-semibold">${item.name}</p>
-                            <p class="text-sm text-gray-600">${item.custom}</p>
+        // Función para generar las opciones de personalización según la categoría
+        function generateCustomizationOptions(category, itemId) {
+            let optionsHTML = '';
+            
+            if (category === 'tacos' || category === 'burritos') {
+                optionsHTML = `
+                    <div class="mb-4">
+                        <h4 class="font-medium mb-2">Ingredientes</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="option-checkbox mr-2" name="ingrediente-${itemId}" value="salsa-roja">
+                                <span>Salsa Roja</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="option-checkbox mr-2" name="ingrediente-${itemId}" value="salsa-verde">
+                                <span>Salsa Verde</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="option-checkbox mr-2" name="ingrediente-${itemId}" value="cebolla">
+                                <span>Cebolla</span>
+                            </label>
                         </div>
-                        <div class="flex items-center">
-                            <span class="font-bold mr-4">$${item.price}</span>
-                            <button onclick="removeItem(${index})" class="text-red-500 hover:text-red-700">
-                                ✕
-                            </button>
+                    </div>
+                `;
+            } else if (category === 'bebidas') {
+                optionsHTML = `
+                    <div class="mb-4">
+                        <h4 class="font-medium mb-2">Opciones</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="option-checkbox mr-2" name="opcion-${itemId}" value="hielo">
+                                <span>Con hielo</span>
+                            </label>
                         </div>
-                    `;
-                    orderSummary.appendChild(itemElement);
-                    total += item.price;
+                    </div>
+                `;
+            }
+            
+            optionsHTML += `
+                <div>
+                    <h4 class="font-medium mb-2">Notas especiales</h4>
+                    <textarea 
+                        class="w-full bg-gray-700 rounded-lg p-3 text-sm text-white placeholder-gray-400" 
+                        rows="2" 
+                        placeholder="Ej: Sin cebolla, extra salsa..."></textarea>
+                </div>
+            `;
+            
+            return optionsHTML;
+        }
+
+        // Función para generar un elemento del menú
+        function generateMenuItem(item, category) {
+            return `
+                <div class="item-card p-4" data-category="${category}" data-id="${item.id}">
+                    <div class="flex items-start">
+                        ${getCategoryIcon(category)}
+                        <div class="ml-4 flex-1">
+                            <div class="flex justify-between">
+                                <h3 class="font-bold text-lg">${item.name}</h3>
+                                <span class="font-bold text-amber-500">$${item.price}</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mt-1">${item.description}</p>
+                            
+                            <div class="flex justify-between items-center mt-3">
+                                <div class="quantity-selector">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity mx-3">0</span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <button class="toggle-details text-amber-500 text-sm font-medium">
+                                    Personalizar <i class="fas fa-chevron-down ml-1"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="details mt-3 hidden">
+                                ${generateCustomizationOptions(category, item.id)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Función para cargar los productos por categoría
+        function loadProducts(category) {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+            
+            if (menuItems[category]) {
+                menuItems[category].forEach(item => {
+                    productList.innerHTML += generateMenuItem(item, category);
                 });
             }
-
-            totalElement.textContent = total;
+            
+            // Activar los event listeners para los nuevos elementos
+            activateEventListeners();
         }
 
-        function removeItem(index) {
-            currentOrder.splice(index, 1);
-            updateOrderSummary();
-        }
-
-        function sendOrderToKitchen() {
-            if (currentOrder.length === 0) {
-                alert('¡Agrega al menos un taco a la orden!');
-                return;
-            }
-
-            const orderId = Date.now(); // ID único (simulado)
-            orders.push({
-                id: orderId,
-                items: [...currentOrder],
-                status: 'pending',
-                timestamp: new Date().toLocaleTimeString()
-            });
-
-            currentOrder = [];
-            updateOrderSummary();
-            renderKitchenOrders();
-            alert('¡Orden enviada a cocina!');
-        }
-
-        function renderKitchenOrders() {
-            kitchenOrders.innerHTML = '';
-
-            if (orders.length === 0) {
-                kitchenOrders.innerHTML = '<p class="text-gray-500 italic">No hay órdenes pendientes.</p>';
-                return;
-            }
-
-            orders.forEach(order => {
-                const orderElement = document.createElement('div');
-                orderElement.className = 'bg-white p-4 rounded-lg shadow-md pulse-animation';
-                orderElement.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-bold text-lg">Orden #${order.id.toString().slice(-4)}</h3>
-                        <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${order.status}</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-2">Hora: ${order.timestamp}</p>
-                    <ul class="mb-3">
-                        ${order.items.map(item => `
-                            <li class="flex justify-between py-1 border-b">
-                                <span>${item.name} (${item.custom})</span>
-                                <span>$${item.price}</span>
-                            </li>
-                        `).join('')}
-                    </ul>
-                    <div class="flex justify-between font-bold">
-                        <span>Total:</span>
-                        <span>$${order.items.reduce((sum, item) => sum + item.price, 0)}</span>
-                    </div>
-                    <button onclick="markAsDone(${order.id})" class="mt-3 w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 transition-colors">
-                        Marcar como listo
+        // Función para mostrar las mesas disponibles
+        function showTablesModal() {
+            const modal = document.getElementById('table-modal');
+            const tablesContainer = document.getElementById('tables-container');
+            
+            tablesContainer.innerHTML = '';
+            
+            // Generar botones para las 6 mesas
+            for (let i = 1; i <= 6; i++) {
+                const hasOrder = appState.orders[i] && appState.orders[i].length > 0;
+                
+                tablesContainer.innerHTML += `
+                    <button class="table-btn ${hasOrder ? 'has-order' : ''} ${appState.currentTable === i ? 'active' : ''}" 
+                            data-table="${i}">
+                        ${i}
+                        ${hasOrder ? '<span class="absolute top-0 right-0 w-3 h-3 bg-amber-500 rounded-full"></span>' : ''}
                     </button>
                 `;
-                kitchenOrders.appendChild(orderElement);
+            }
+            
+            modal.classList.remove('hidden');
+            
+            // Activar event listeners para los botones de mesa
+            document.querySelectorAll('.table-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remover clase activa de todos los botones
+                    document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('active'));
+                    // Agregar clase activa al botón clickeado
+                    this.classList.add('active');
+                    appState.currentTable = parseInt(this.dataset.table);
+                });
             });
         }
 
-        function markAsDone(orderId) {
-            const orderIndex = orders.findIndex(order => order.id === orderId);
-            if (orderIndex !== -1) {
-                orders[orderIndex].status = 'completed';
-                renderKitchenOrders();
+        // Función para confirmar la selección de mesa
+        function confirmTableSelection() {
+            const modal = document.getElementById('table-modal');
+            const currentTableSpan = document.getElementById('current-table');
+            
+            if (appState.currentTable) {
+                currentTableSpan.textContent = `Mesa #${appState.currentTable}`;
+                modal.classList.add('hidden');
+                
+                // Cargar la orden actual si existe
+                if (appState.orders[appState.currentTable]) {
+                    appState.currentOrder = [...appState.orders[appState.currentTable]];
+                } else {
+                    appState.currentOrder = [];
+                }
+            } else {
+                alert('Por favor seleccione una mesa');
             }
         }
+
+        // Modificar la función addItemsToOrder para validar cantidad > 0
+function addItemsToOrder() {
+    if (!appState.currentTable) {
+        alert('Por favor seleccione una mesa primero');
+        showTablesModal();
+        return;
+    }
+    
+    const selectedItems = [];
+    let itemsAdded = 0;
+    
+    // Recorrer todos los items del menú
+    document.querySelectorAll('.item-card').forEach(card => {
+        const quantity = parseInt(card.querySelector('.quantity').textContent);
+        
+        if (quantity > 0) {
+            itemsAdded++;
+            const itemId = parseInt(card.dataset.id);
+            const category = card.dataset.category;
+            const itemData = menuItems[category].find(item => item.id === itemId);
+            
+            // Obtener personalizaciones
+            const customizations = {
+                ingredients: [],
+                notes: ''
+            };
+            
+            // Obtener checkboxes marcados
+            card.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                customizations.ingredients.push(checkbox.value);
+            });
+            
+            // Obtener notas
+            const notesTextarea = card.querySelector('textarea');
+            if (notesTextarea) {
+                customizations.notes = notesTextarea.value;
+            }
+            
+            // Agregar a la orden
+            for (let i = 0; i < quantity; i++) {
+                selectedItems.push({
+                    ...itemData,
+                    customizations
+                });
+            }
+        }
+    });
+    
+    if (itemsAdded === 0) {
+        alert('Por favor seleccione al menos un item (cantidad mayor a 0)');
+        return;
+    }
+    
+    // Agregar items a la orden actual
+    appState.currentOrder = [...appState.currentOrder, ...selectedItems];
+    
+    // Actualizar las órdenes en el estado
+    appState.orders[appState.currentTable] = [...appState.currentOrder];
+    
+    alert(`Se agregaron ${itemsAdded} productos (${selectedItems.length} unidades) a la orden de la mesa #${appState.currentTable}`);
+    
+    // Resetear cantidades (a 0 ahora)
+    document.querySelectorAll('.quantity').forEach(el => el.textContent = '0');
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('textarea').forEach(ta => ta.value = '');
+}
+
+        // Función para cargar las órdenes activas
+        function loadActiveOrders() {
+            const ordersList = document.getElementById('active-orders-list');
+            ordersList.innerHTML = '';
+            
+            let hasOrders = false;
+            
+            // Mostrar solo mesas con órdenes
+            for (let table = 1; table <= 6; table++) {
+                if (appState.orders[table] && appState.orders[table].length > 0) {
+                    hasOrders = true;
+                    
+                    const total = appState.orders[table].reduce((sum, item) => sum + item.price, 0);
+                    
+                    ordersList.innerHTML += `
+                        <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-lg">Mesa #${table}</h3>
+                                <span class="text-amber-500 font-bold">$${total}</span>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">${appState.orders[table].length} items</div>
+                            <div class="flex space-x-2">
+                                <button class="edit-order-btn bg-gray-700 px-3 py-1 rounded-lg text-sm" data-table="${table}">
+                                    <i class="fas fa-edit mr-1"></i> Editar
+                                </button>
+                                <button class="view-bill-btn bg-amber-600 px-3 py-1 rounded-lg text-sm" data-table="${table}">
+                                    <i class="fas fa-file-invoice-dollar mr-1"></i> Cuenta
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (!hasOrders) {
+                ordersList.innerHTML = '<p class="text-gray-400 text-center py-8">No hay órdenes activas</p>';
+            }
+            
+            // Activar event listeners para los botones
+            document.querySelectorAll('.edit-order-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const table = parseInt(this.dataset.table);
+                    appState.currentTable = table;
+                    appState.currentOrder = [...appState.orders[table]];
+                    document.getElementById('current-table').textContent = `Mesa #${table}`;
+                    switchTab('menu');
+                });
+            });
+            
+            document.querySelectorAll('.view-bill-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const table = parseInt(this.dataset.table);
+                    loadBillDetails(table);
+                    switchTab('bill');
+                });
+            });
+        }
+
+        // Función para cargar los detalles de la cuenta
+        function loadBillDetails(table) {
+            const billDetails = document.getElementById('bill-details');
+            
+            if (!appState.orders[table] || appState.orders[table].length === 0) {
+                billDetails.innerHTML = '<p class="text-gray-400 text-center py-8">No hay items en esta orden</p>';
+                return;
+            }
+            
+            // Agrupar items iguales
+            const groupedItems = {};
+            
+            appState.orders[table].forEach(item => {
+                const key = `${item.name}-${JSON.stringify(item.customizations)}`;
+                if (!groupedItems[key]) {
+                    groupedItems[key] = {
+                        ...item,
+                        quantity: 1
+                    };
+                } else {
+                    groupedItems[key].quantity++;
+                }
+            });
+            
+            // Calcular total
+            const total = appState.orders[table].reduce((sum, item) => sum + item.price, 0);
+            
+            // Generar HTML
+            let html = `
+                <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                    <h3 class="font-bold text-xl mb-4">Mesa #${table}</h3>
+                    <div class="space-y-4">
+            `;
+            
+            Object.values(groupedItems).forEach(item => {
+                html += `
+                    <div class="flex justify-between items-start border-b border-gray-700 pb-3">
+                        <div>
+                            <div class="font-medium">${item.name} x${item.quantity}</div>
+                            ${item.customizations.ingredients.length > 0 ? 
+                                `<div class="text-sm text-gray-400">${item.customizations.ingredients.join(', ')}</div>` : ''}
+                            ${item.customizations.notes ? 
+                                `<div class="text-xs text-gray-500 mt-1">Nota: ${item.customizations.notes}</div>` : ''}
+                        </div>
+                        <div class="font-bold">$${item.price * item.quantity}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-700">
+                        <span class="font-bold text-lg">Total:</span>
+                        <span class="font-bold text-xl text-amber-500">$${total}</span>
+                    </div>
+                    <div class="mt-6">
+                        <button id="print-bill-btn" class="w-full bg-amber-600 text-white py-2 rounded-lg font-bold">
+                            <i class="fas fa-print mr-2"></i> Imprimir Cuenta
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            billDetails.innerHTML = html;
+            
+            // Activar event listener para el botón de imprimir
+            document.getElementById('print-bill-btn').addEventListener('click', () => {
+                generatePDF(table);
+            });
+        }
+
+        // Función para generar PDF de la cuenta
+function generatePDF(table) {
+    const doc = new jsPDF();
+    
+    // Configuración de estilos
+    doc.setFont('helvetica');
+    
+    // Logo o nombre del restaurante (centrado)
+    doc.setFontSize(24);
+    doc.setTextColor(217, 119, 6); // Color ámbar
+    doc.text('TAQUERÍA MS', 105, 20, { align: 'center' });
+    
+    // Información del restaurante
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100); // Gris oscuro
+    doc.text('Av. Pantitlán 397, Evolución, Nezahualcóyotl', 105, 26, { align: 'center' });
+    doc.text('Tel: 55 1234 5678 | Horario: 10:30 AM - 10:00 PM', 105, 30, { align: 'center' });
+    
+    // Línea decorativa
+    doc.setDrawColor(217, 119, 6);
+    doc.setLineWidth(0.5);
+    doc.line(50, 35, 160, 35);
+    
+    // Información del ticket
+    doc.setFontSize(12);
+    doc.setTextColor(40, 40, 40); // Negro
+    doc.text(`Mesa: #${table}`, 15, 45);
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('es-MX', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    
+    doc.text(`Fecha: ${dateStr}`, 15, 51);
+    doc.text(`Hora: ${timeStr}`, 15, 57);
+    
+    // Línea divisoria
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, 62, 195, 62);
+    
+    // Encabezado de la tabla
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255); // Blanco
+    doc.setFillColor(217, 119, 6); // Ámbar
+    doc.rect(15, 67, 180, 8, 'F');
+    doc.text('Descripción', 20, 72);
+    doc.text('Cant.', 140, 72);
+    doc.text('Total', 170, 72);
+    
+    // Cuerpo de la tabla
+    const items = appState.orders[table];
+    let yPos = 80;
+    
+    // Agrupar items iguales
+    const groupedItems = {};
+    items.forEach(item => {
+        const key = `${item.name}-${JSON.stringify(item.customizations)}`;
+        if (!groupedItems[key]) {
+            groupedItems[key] = {
+                ...item,
+                quantity: 1
+            };
+        } else {
+            groupedItems[key].quantity++;
+        }
+    });
+    
+    // Agregar items a la tabla
+    doc.setFontSize(10);
+    doc.setTextColor(40, 40, 40); // Negro
+    
+    Object.values(groupedItems).forEach(item => {
+        // Descripción del producto
+        doc.text(item.name, 20, yPos);
+        
+        // Personalizaciones si existen
+        if (item.customizations.ingredients.length > 0 || item.customizations.notes) {
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100); // Gris
+            
+            let detailText = '';
+            if (item.customizations.ingredients.length > 0) {
+                detailText += `Ingredientes: ${item.customizations.ingredients.join(', ')}`;
+            }
+            if (item.customizations.notes) {
+                detailText += detailText ? ' | ' : '';
+                detailText += `Nota: ${item.customizations.notes}`;
+            }
+            
+            // Dividir el texto si es muy largo
+            const splitText = doc.splitTextToSize(detailText, 100);
+            splitText.forEach((line, i) => {
+                doc.text(line, 22, yPos + 5 + (i * 4));
+            });
+            
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40); // Negro
+            yPos += 5 + (splitText.length * 4);
+        }
+        
+        // Cantidad y total
+        doc.text(item.quantity.toString(), 140, yPos);
+        doc.text(`$${item.price * item.quantity}`, 170, yPos);
+        
+        yPos += 10;
+        
+        // Espacio adicional si hay personalizaciones
+        if (item.customizations.ingredients.length > 0 || item.customizations.notes) {
+            yPos += 5;
+        }
+    });
+    
+    // Línea divisoria antes del total
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, yPos, 195, yPos);
+    yPos += 10;
+    
+    // Total
+    const total = items.reduce((sum, item) => sum + item.price, 0);
+    doc.setFontSize(14);
+    doc.text('TOTAL:', 140, yPos);
+    doc.text(`$${total}`, 170, yPos);
+    
+    // Pie de página
+    yPos += 20;
+    doc.setFontSize(12);
+    doc.setTextColor(217, 119, 6); // Ámbar
+    doc.text('¡Gracias por su preferencia!', 105, yPos, { align: 'center' });
+    
+    yPos += 10;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100); // Gris
+    doc.text('TAQUERÍA MS - Av. Pantitlán 397, Evolución, Nezahualcóyotl', 105, yPos, { align: 'center' });
+    doc.text(`Mesa #${table} | ${dateStr} ${timeStr}`, 105, yPos + 5, { align: 'center' });
+    
+    // Guardar PDF
+    doc.save(`TaqueriaMS_Mesa${table}_${now.getTime()}.pdf`);
+}
+
+        // Función para cambiar entre pestañas
+        function switchTab(tabName) {
+            // Ocultar todo el contenido primero
+            document.querySelectorAll('#main-content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            
+            // Mostrar el contenido seleccionado
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+            
+            // Actualizar navegación
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Cargar contenido específico de la pestaña
+            if (tabName === 'orders') {
+                loadActiveOrders();
+            } else if (tabName === 'bill' && appState.currentTable) {
+                loadBillDetails(appState.currentTable);
+            }
+        }
+
+        // Función para activar los event listeners
+        function activateEventListeners() {
+            // Toggle para mostrar/ocultar detalles
+            const toggleButtons = document.querySelectorAll('.toggle-details');
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const details = this.closest('.item-card').querySelector('.details');
+                    const icon = this.querySelector('i');
+                    
+                    details.classList.toggle('hidden');
+                    
+                    if(details.classList.contains('hidden')) {
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    } else {
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                    }
+                });
+            });
+            
+            // Selector de cantidad
+            const minusButtons = document.querySelectorAll('.quantity-btn.minus');
+            const plusButtons = document.querySelectorAll('.quantity-btn.plus');
+            
+            // Modificar la función minusButtons para que no baje de 0
+minusButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        const quantityElement = this.nextElementSibling;
+        let quantity = parseInt(quantityElement.textContent);
+        if(quantity > 0) {
+            quantity--;
+            quantityElement.textContent = quantity;
+        }
+    });
+});
+            
+            plusButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const quantityElement = this.previousElementSibling;
+                    let quantity = parseInt(quantityElement.textContent);
+                    quantity++;
+                    quantityElement.textContent = quantity;
+                });
+            });
+        }
+
+        // Inicialización de la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            // Activar la primera categoría
+            const firstCategoryBtn = document.querySelector('.category-btn');
+            if (firstCategoryBtn) {
+                firstCategoryBtn.classList.remove('bg-gray-700');
+                firstCategoryBtn.classList.add('bg-amber-600', 'active');
+                loadProducts(firstCategoryBtn.dataset.category);
+            }
+            
+            // Event listeners para botones de categoría
+            document.querySelectorAll('.category-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.dataset.category;
+                    
+                    // Remover clase activa de todos los botones
+                    document.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.classList.remove('bg-amber-600', 'active');
+                        btn.classList.add('bg-gray-700');
+                    });
+                    
+                    // Agregar clase activa al botón clickeado
+                    this.classList.remove('bg-gray-700');
+                    this.classList.add('bg-amber-600', 'active');
+                    
+                    // Cargar productos de la categoría seleccionada
+                    loadProducts(category);
+                });
+            });
+            
+            // Event listeners para la barra de navegación
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+            
+            // Event listener para el botón de agregar a la orden
+            document.querySelector('.add-to-order-btn').addEventListener('click', addItemsToOrder);
+            
+            // Event listener para el botón de confirmar mesa
+            document.getElementById('confirm-table-btn').addEventListener('click', confirmTableSelection);
+            
+            // Mostrar modal de selección de mesa al hacer clic en el indicador de mesa
+            document.getElementById('current-table').addEventListener('click', showTablesModal);
+            
+            // Inicializar órdenes para todas las mesas
+            for (let i = 1; i <= 6; i++) {
+                if (!appState.orders[i]) {
+                    appState.orders[i] = [];
+                }
+            }
+        });
     </script>
 </body>
 </html>
