@@ -7,10 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root {
@@ -69,8 +68,9 @@
             color: var(--primary);
         }
         
-        .nav-btn.active svg {
+        .nav-btn.active svg, .nav-btn.active i { /* Añadido 'i' para FontAwesome */
             fill: var(--primary);
+            color: var(--primary); /* Para FontAwesome */
         }
         
         .chart-container {
@@ -96,74 +96,43 @@
         }
         
         @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(217, 119, 6, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(217, 119, 6, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
         }
         
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        
+        .floating { animation: floating 3s ease-in-out infinite; }
         @keyframes floating {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
         }
         
-        /* Efecto de brillo al pasar el mouse */
-        .glow-on-hover {
-            transition: all 0.3s ease;
-        }
+        .glow-on-hover { transition: all 0.3s ease; }
+        .glow-on-hover:hover { box-shadow: 0 0 15px rgba(217, 119, 6, 0.5); }
         
-        .glow-on-hover:hover {
-            box-shadow: 0 0 15px rgba(217, 119, 6, 0.5);
-        }
-        
-        /* Estilos para dispositivos más grandes */
         @media (min-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .best-sellers-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .flex-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        
-        /* Estilos para pantallas muy grandes */
         @media (min-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .best-sellers-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .flex-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
 <body class="min-h-screen pb-20">
-    <!-- Header -->
-    <div class="bg-black py-4 px-6 flex justify-between items-center sticky top-0 z-10">
+    <div class="bg-black py-4 px-6 flex justify-between items-center sticky top-0 z-20"> 
         <h1 class="text-xl font-bold text-amber-500">Taquería MS - Vista Gerente</h1>
         <div class="flex items-center space-x-4">
             <span class="text-sm bg-amber-600 px-3 py-1 rounded-full" id="current-date"></span>
-            <button class="text-white">
-                <i class="fas fa-bell"></i>
+            <button id="logoutButton" title="Cerrar Sesión" class="text-white hover:text-red-500 transition-colors duration-150">
+                <i class="fas fa-sign-out-alt text-xl"></i>
             </button>
         </div>
     </div>
 
-    <!-- Contenido principal -->
-    <div class="px-4 py-3">
-        <!-- Selector de período de tiempo -->
+    <div id="mainContent" class="px-4 py-3 opacity-0 transition-opacity duration-500"> 
         <div class="flex overflow-x-auto whitespace-nowrap space-x-2 mb-6 pb-2">
             <button class="timeframe-btn px-4 py-2 rounded-full font-medium active" data-timeframe="hoy">Hoy</button>
             <button class="timeframe-btn px-4 py-2 rounded-full font-medium" data-timeframe="semana">Esta Semana</button>
@@ -172,12 +141,10 @@
             <button class="timeframe-btn px-4 py-2 rounded-full font-medium" data-timeframe="personalizado">Personalizado</button>
         </div>
         
-        <!-- Sección de estadísticas rápidas -->
         <h2 class="text-xl font-bold mb-4 flex items-center">
             <i class="fas fa-chart-line text-amber-500 mr-2"></i> Resumen General
         </h2>
         <div class="grid grid-cols-1 gap-4 mb-6 stats-grid">
-            <!-- Tarjeta de Ventas Totales -->
             <div class="stats-card p-5 glow-on-hover">
                 <div class="flex justify-between items-start">
                     <div>
@@ -193,7 +160,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta de Órdenes Totales -->
             <div class="stats-card p-5 glow-on-hover">
                 <div class="flex justify-between items-start">
                     <div>
@@ -209,7 +175,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta de Productos Vendidos -->
             <div class="stats-card p-5 glow-on-hover">
                 <div class="flex justify-between items-start">
                     <div>
@@ -225,7 +190,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta de Mesa Promedio -->
             <div class="stats-card p-5 glow-on-hover">
                 <div class="flex justify-between items-start">
                     <div>
@@ -242,7 +206,6 @@
             </div>
         </div>
         
-        <!-- Gráfico de Ventas -->
         <h2 class="text-xl font-bold mb-4 flex items-center">
             <i class="fas fa-chart-bar text-amber-500 mr-2"></i> Tendencia de Ventas
         </h2>
@@ -250,80 +213,14 @@
             <canvas id="salesChart"></canvas>
         </div>
         
-        <!-- Sección de Productos Más Vendidos -->
         <h2 class="text-xl font-bold mb-4 flex items-center">
-            <i class="fas fa-medal text-amber-500 mr-2"></i> Productos Destacados
+            <i class="fas fa-chair text-amber-500 mr-2"></i> Órdenes por Mesa
         </h2>
-        <div class="grid grid-cols-1 gap-4 mb-6 best-sellers-grid">
-            <!-- Taco más vendido -->
-            <div class="best-seller-card p-5 glow-on-hover">
-                <div class="flex items-center mb-3">
-                    <div class="bg-amber-500 bg-opacity-20 p-2 rounded-full mr-3">
-                        <i class="fas fa-utensils text-amber-500"></i>
-                    </div>
-                    <h3 class="font-bold">Taco Más Vendido</h3>
-                </div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-2xl font-bold" id="best-taco">-</p>
-                        <p class="text-gray-400 text-sm" id="best-taco-sales">0 vendidos</p>
-                    </div>
-                    <div class="bg-amber-500 text-white p-2 rounded-full floating">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Burrito más vendido -->
-            <div class="best-seller-card p-5 glow-on-hover">
-                <div class="flex items-center mb-3">
-                    <div class="bg-red-500 bg-opacity-20 p-2 rounded-full mr-3">
-                        <i class="fas fa-burrito text-red-500"></i>
-                    </div>
-                    <h3 class="font-bold">Burrito Más Vendido</h3>
-                </div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-2xl font-bold" id="best-burrito">-</p>
-                        <p class="text-gray-400 text-sm" id="best-burrito-sales">0 vendidos</p>
-                    </div>
-                    <div class="bg-red-500 text-white p-2 rounded-full floating">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Bebida más vendida -->
-            <div class="best-seller-card p-5 glow-on-hover">
-                <div class="flex items-center mb-3">
-                    <div class="bg-blue-500 bg-opacity-20 p-2 rounded-full mr-3">
-                        <i class="fas fa-glass-whiskey text-blue-500"></i>
-                    </div>
-                    <h3 class="font-bold">Bebida Más Vendida</h3>
-                </div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-2xl font-bold" id="best-drink">-</p>
-                        <p class="text-gray-400 text-sm" id="best-drink-sales">0 vendidos</p>
-                    </div>
-                    <div class="bg-blue-500 text-white p-2 rounded-full floating">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                </div>
-            </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 flex-grid" id="orders-by-table-cards">
         </div>
-        
-        <!-- Gráfico de Distribución de Ventas -->
+
         <h2 class="text-xl font-bold mb-4 flex items-center">
-            <i class="fas fa-chart-pie text-amber-500 mr-2"></i> Distribución de Ventas
-        </h2>
-        <div class="chart-container mb-6 glow-on-hover">
-            <canvas id="categoryChart"></canvas>
-        </div>
-        
-        <!-- Tabla de Mesas con más ventas -->
-        <h2 class="text-xl font-bold mb-4 flex items-center">
-            <i class="fas fa-table text-amber-500 mr-2"></i> Desempeño por Mesa
+            <i class="fas fa-table text-amber-500 mr-2"></i> Desempeño por Mesa (Detalle)
         </h2>
         <div class="bg-gray-800 rounded-lg overflow-hidden mb-6 glow-on-hover">
             <div class="overflow-x-auto">
@@ -338,13 +235,11 @@
                         </tr>
                     </thead>
                     <tbody id="tables-performance">
-                        <!-- Datos se llenarán con JavaScript -->
                     </tbody>
                 </table>
             </div>
         </div>
         
-        <!-- Gráfico de Horario Pico -->
         <h2 class="text-xl font-bold mb-4 flex items-center">
             <i class="fas fa-clock text-amber-500 mr-2"></i> Horario Pico
         </h2>
@@ -353,27 +248,17 @@
         </div>
     </div>
 
-    <!-- Barra inferior de navegación -->
-    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 flex justify-around py-3">
-        <button class="nav-btn flex flex-col items-center" data-tab="dashboard">
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 flex justify-around py-3 z-10"> 
+        <button class="nav-btn flex flex-col items-center active" data-tab="dashboard"> 
             <i class="fas fa-chart-pie text-xl mb-1"></i>
             <span class="text-xs">Dashboard</span>
         </button>
-        <button class="nav-btn flex flex-col items-center" data-tab="inventory">
+        <a href="inventario.html" class="nav-btn flex flex-col items-center" data-tab="inventory">
             <i class="fas fa-boxes text-xl mb-1"></i>
             <span class="text-xs">Inventario</span>
-        </button>
-        <button class="nav-btn flex flex-col items-center" data-tab="reports">
-            <i class="fas fa-file-alt text-xl mb-1"></i>
-            <span class="text-xs">Reportes</span>
-        </button>
-        <button class="nav-btn flex flex-col items-center" data-tab="settings">
-            <i class="fas fa-cog text-xl mb-1"></i>
-            <span class="text-xs">Ajustes</span>
-        </button>
+        </a>
     </div>
 
-    <!-- Modal para seleccionar rango de fechas -->
     <div id="date-range-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
             <h2 class="text-xl font-bold mb-4">Seleccionar Rango de Fechas</h2>
@@ -394,602 +279,414 @@
         </div>
     </div>
 
-    <script>
-        // Configuración de Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDi4WBHRGgXMp_rtPvV9IDw3foEjtr0L2o",
-            authDomain: "tacosms-acbb2.firebaseapp.com",
-            databaseURL: "https://tacosms-acbb2-default-rtdb.firebaseio.com",
-            projectId: "tacosms-acbb2",
-            storageBucket: "tacosms-acbb2.appspot.com",
-            messagingSenderId: "701143542092",
-            appId: "1:701143542092:web:29f1d59ffe2751a3c207e9"
-        };
+<script>
+    // Configuración de Firebase (LA MISMA QUE USASTE EN login.html Y inventario.html)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDi4WBHRGgXMp_rtPvV9IDw3foEjtr0L2o",
+        authDomain: "tacosms-acbb2.firebaseapp.com",
+        databaseURL: "https://tacosms-acbb2-default-rtdb.firebaseio.com",
+        projectId: "tacosms-acbb2",
+        storageBucket: "tacosms-acbb2.appspot.com",
+        messagingSenderId: "701143542092",
+        appId: "1:701143542092:web:29f1d59ffe2751a3c207e9"
+    };
 
-        // Inicializar Firebase
+    // Inicializar Firebase
+    if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    }
+    const database = firebase.database();
+    const auth = firebase.auth(); // Inicializar Firebase Auth
 
-        // Variables para los gráficos
-        let salesChart, categoryChart, peakHoursChart;
+    // --- Protección de Ruta y Lógica de Logout ---
+    const mainContent = document.getElementById('mainContent');
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Usuario está logueado.
+            console.log("Usuario autenticado:", user.uid);
+            // Verificar rol (opcional aquí, pero bueno para consistencia si esta es solo para gerentes)
+            database.ref('/userRoles/' + user.uid + '/role').once('value').then(snapshot => {
+                const role = snapshot.val();
+                if (role === 'gerente') {
+                    console.log("Rol verificado: gerente. Mostrando contenido.");
+                    mainContent.classList.remove('opacity-0'); // Muestra el contenido
+                    initializeDashboard(); // Llama a la función que inicializa el dashboard
+                } else {
+                    console.warn("Rol no autorizado para esta vista:", role);
+                    alert("No tienes permiso para acceder a esta página.");
+                    auth.signOut().then(() => {
+                        window.location.href = 'login.html';
+                    });
+                }
+            }).catch(error => {
+                console.error("Error al verificar rol:", error);
+                alert("Error al verificar tu rol. Se cerrará la sesión.");
+                auth.signOut().then(() => {
+                    window.location.href = 'login.html';
+                });
+            });
+
+        } else {
+            // No hay usuario logueado. Redirigir a login.html
+            console.log("Usuario no autenticado, redirigiendo a login.html...");
+            window.location.href = 'login.html';
+        }
+    });
+
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                console.log("Cierre de sesión exitoso.");
+                alert("Has cerrado sesión.");
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error("Error al cerrar sesión:", error);
+                alert("Error al cerrar sesión: " + error.message);
+            });
+        });
+    }
+    
+    // --- INICIO DEL CÓDIGO ORIGINAL DEL DASHBOARD ---
+    // Variables para los gráficos
+    let salesChart, peakHoursChart; 
+    
+    const appState = {
+        currentTimeframe: 'hoy',
+        startDate: null,
+        endDate: null,
+        ordersData: [],
+        previousData: [],
+        ordersByIndividualTable: {}
+    };
+
+    function formatMoney(amount) {
+        return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    }
+
+    function formatDate(date) {
+        const offset = date.getTimezoneOffset(); 
+        const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return localDate.toLocaleDateString('es-MX', options);
+    }
+
+    function updateCurrentDate() {
+        const el = document.getElementById('current-date');
+        if(el) el.textContent = formatDate(new Date());
+    }
+
+    function getDateRange(timeframe) {
+        const now = new Date();
+        let start, end = new Date(now);
+        now.setHours(0, 0, 0, 0); 
+
+        switch(timeframe) {
+            case 'hoy':
+                start = new Date(now);
+                end = new Date(now); 
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'semana':
+                start = new Date(now);
+                start.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1)); 
+                start.setHours(0, 0, 0, 0);
+                end = new Date(start);
+                end.setDate(start.getDate() + 6); 
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'mes':
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0); 
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'año':
+                start = new Date(now.getFullYear(), 0, 1);
+                end = new Date(now.getFullYear(), 11, 31);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'personalizado':
+                if (!appState.startDate || !appState.endDate) { // Fallback si las fechas no están seteadas
+                    console.warn("Fechas personalizadas no establecidas, usando 'hoy' por defecto.");
+                    return getDateRange('hoy'); // Llama recursivamente con 'hoy'
+                }
+                const customStart = new Date(appState.startDate);
+                customStart.setHours(0, 0, 0, 0);
+                const customEnd = new Date(appState.endDate);
+                customEnd.setHours(23, 59, 59, 999);
+                return { start: customStart, end: customEnd };
+            default:
+                start = new Date(now);
+                start.setHours(0, 0, 0, 0);
+                end = new Date(now);
+                end.setHours(23, 59, 59, 999);
+        }
+        return { start, end };
+    }
+
+    async function loadData(timeframe) {
+        console.log("Cargando datos para:", timeframe);
+        const { start, end } = getDateRange(timeframe);
+        appState.currentTimeframe = timeframe;
         
-        // Estado de la aplicación
-        const appState = {
-            currentTimeframe: 'hoy',
-            startDate: null,
-            endDate: null,
-            ordersData: [],
-            previousData: [],
-            bestSellers: {
-                tacos: {},
-                burritos: {},
-                bebidas: {}
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.timeframe === timeframe) {
+                btn.classList.add('active');
             }
-        };
-
-        // Función para formatear dinero
-        function formatMoney(amount) {
-            return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-        }
-
-        // Función para formatear fecha
-        function formatDate(date) {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            return date.toLocaleDateString('es-MX', options);
-        }
-
-        // Función para obtener la fecha actual formateada
-        function updateCurrentDate() {
-            document.getElementById('current-date').textContent = formatDate(new Date());
-        }
-
-        // Función para calcular el rango de fechas según el timeframe
-        function getDateRange(timeframe) {
-            const now = new Date();
-            let start, end = new Date(now);
+        });
+        
+        showLoading();
+        
+        try {
+            const currentData = await fetchOrdersData(start, end);
+            appState.ordersData = currentData;
             
-            switch(timeframe) {
-                case 'hoy':
-                    start = new Date(now);
-                    start.setHours(0, 0, 0, 0);
-                    break;
-                case 'semana':
-                    start = new Date(now);
-                    start.setDate(now.getDate() - now.getDay()); // Domingo de esta semana
-                    start.setHours(0, 0, 0, 0);
-                    break;
-                case 'mes':
-                    start = new Date(now.getFullYear(), now.getMonth(), 1);
-                    break;
-                case 'año':
-                    start = new Date(now.getFullYear(), 0, 1);
-                    break;
-                case 'personalizado':
-                    return {
-                        start: appState.startDate,
-                        end: appState.endDate
-                    };
-                default:
-                    start = new Date(now);
-                    start.setHours(0, 0, 0, 0);
+            let previousStart, previousEnd;
+            if (timeframe === 'hoy') {
+                previousStart = new Date(start); previousStart.setDate(start.getDate() - 1);
+                previousEnd = new Date(end); previousEnd.setDate(end.getDate() - 1);
+            } else if (timeframe === 'semana') {
+                previousStart = new Date(start); previousStart.setDate(start.getDate() - 7);
+                previousEnd = new Date(end); previousEnd.setDate(end.getDate() - 7);
+            } else if (timeframe === 'mes') {
+                previousStart = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+                previousEnd = new Date(start.getFullYear(), start.getMonth(), 0); 
+            } else if (timeframe === 'año') {
+                previousStart = new Date(start.getFullYear() - 1, 0, 1);
+                previousEnd = new Date(start.getFullYear() - 1, 11, 31);
             }
             
-            return { start, end };
-        }
-
-        // Función para cargar datos de Firebase
-        async function loadData(timeframe) {
-            const { start, end } = getDateRange(timeframe);
-            appState.currentTimeframe = timeframe;
-            
-            // Actualizar botones de timeframe
-            document.querySelectorAll('.timeframe-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.timeframe === timeframe) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // Mostrar loading
-            showLoading();
-            
-            try {
-                // Obtener datos del período actual
-                const currentData = await fetchOrdersData(start, end);
-                appState.ordersData = currentData;
-                
-                // Obtener datos del período anterior para comparación
-                let previousStart, previousEnd;
-                
-                if (timeframe === 'hoy') {
-                    previousStart = new Date(start);
-                    previousStart.setDate(start.getDate() - 1);
-                    previousEnd = new Date(end);
-                    previousEnd.setDate(end.getDate() - 1);
-                } else if (timeframe === 'semana') {
-                    previousStart = new Date(start);
-                    previousStart.setDate(start.getDate() - 7);
-                    previousEnd = new Date(end);
-                    previousEnd.setDate(end.getDate() - 7);
-                } else if (timeframe === 'mes') {
-                    previousStart = new Date(start.getFullYear(), start.getMonth() - 1, 1);
-                    previousEnd = new Date(end.getFullYear(), end.getMonth(), 0);
-                } else if (timeframe === 'año') {
-                    previousStart = new Date(start.getFullYear() - 1, 0, 1);
-                    previousEnd = new Date(start.getFullYear() - 1, 11, 31);
-                }
-                
-                if (timeframe !== 'personalizado') {
-                    const previousData = await fetchOrdersData(previousStart, previousEnd);
-                    appState.previousData = previousData;
-                }
-                
-                // Procesar datos y actualizar UI
-                processDataAndUpdateUI();
-                
-            } catch (error) {
-                console.error('Error al cargar datos:', error);
-                alert('Error al cargar datos. Por favor intente nuevamente.');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Función para obtener datos de órdenes de Firebase
-        async function fetchOrdersData(startDate, endDate) {
-            // Convertir fechas a formato YYYY-MM-DD
-            const startStr = startDate.toISOString().split('T')[0];
-            const endStr = endDate.toISOString().split('T')[0];
-            
-            // Obtener todos los datos de órdenes
-            const snapshot = await database.ref('orders').once('value');
-            const ordersData = snapshot.val();
-            
-            // Filtrar órdenes por rango de fechas
-            const filteredOrders = [];
-            
-            if (ordersData) {
-                Object.keys(ordersData).forEach(date => {
-                    // Verificar si la fecha está dentro del rango
-                    if (date >= startStr && date <= endStr) {
-                        const ordersForDate = ordersData[date];
-                        
-                        Object.keys(ordersForDate).forEach(orderId => {
-                            const order = ordersForDate[orderId];
-                            filteredOrders.push({
-                                ...order,
-                                date: date,
-                                orderId: orderId
-                            });
-                        });
-                    }
-                });
-            }
-            
-            return filteredOrders;
-        }
-
-        // Función para procesar datos y actualizar la UI
-        function processDataAndUpdateUI() {
-            const orders = appState.ordersData;
-            const previousOrders = appState.previousData;
-            
-            // Calcular estadísticas básicas
-            const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
-            const totalOrders = orders.length;
-            const totalProducts = orders.reduce((sum, order) => sum + order.items.length, 0);
-            const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
-            
-            // Calcular estadísticas del período anterior para comparación
-            let previousTotalSales = 0;
-            let previousTotalOrders = 0;
-            let previousTotalProducts = 0;
-            let previousAverageTicket = 0;
-            
-            if (previousOrders.length > 0) {
-                previousTotalSales = previousOrders.reduce((sum, order) => sum + order.total, 0);
-                previousTotalOrders = previousOrders.length;
-                previousTotalProducts = previousOrders.reduce((sum, order) => sum + order.items.length, 0);
-                previousAverageTicket = previousTotalOrders > 0 ? previousTotalSales / previousTotalOrders : 0;
-            }
-            
-            // Calcular porcentajes de cambio
-            const salesChange = previousTotalSales > 0 ? 
-                ((totalSales - previousTotalSales) / previousTotalSales * 100).toFixed(1) : 100;
-            const ordersChange = previousTotalOrders > 0 ? 
-                ((totalOrders - previousTotalOrders) / previousTotalOrders * 100).toFixed(1) : 100;
-            const productsChange = previousTotalProducts > 0 ? 
-                ((totalProducts - previousTotalProducts) / previousTotalProducts * 100).toFixed(1) : 100;
-            const ticketChange = previousAverageTicket > 0 ? 
-                ((averageTicket - previousAverageTicket) / previousAverageTicket * 100).toFixed(1) : 100;
-            
-            // Actualizar tarjetas de estadísticas
-            document.getElementById('total-sales').textContent = formatMoney(totalSales);
-            document.getElementById('total-orders').textContent = totalOrders;
-            document.getElementById('total-products').textContent = totalProducts;
-            document.getElementById('average-ticket').textContent = formatMoney(averageTicket);
-            
-            // Actualizar porcentajes de cambio
-            updateChangeIndicator('sales-change', salesChange);
-            updateChangeIndicator('orders-change', ordersChange);
-            updateChangeIndicator('products-change', productsChange);
-            updateChangeIndicator('ticket-change', ticketChange);
-            
-            // Procesar productos más vendidos
-            processBestSellers(orders);
-            
-            // Procesar datos para gráficos
-            processChartData(orders);
-            
-            // Procesar desempeño por mesas
-            processTablesPerformance(orders, totalSales);
-        }
-
-        // Función para actualizar indicadores de cambio
-        function updateChangeIndicator(elementId, changePercent) {
-            const element = document.getElementById(elementId);
-            const change = parseFloat(changePercent);
-            
-            if (change > 0) {
-                element.innerHTML = `<i class="fas fa-caret-up mr-1"></i> ${Math.abs(change)}%`;
-                element.className = 'text-green-400 text-sm mt-2 flex items-center';
-            } else if (change < 0) {
-                element.innerHTML = `<i class="fas fa-caret-down mr-1"></i> ${Math.abs(change)}%`;
-                element.className = 'text-red-400 text-sm mt-2 flex items-center';
+            if (timeframe !== 'personalizado' && previousStart && previousEnd) { 
+                const previousData = await fetchOrdersData(previousStart, previousEnd);
+                appState.previousData = previousData;
             } else {
-                element.innerHTML = `<i class="fas fa-equals mr-1"></i> 0%`;
-                element.className = 'text-gray-400 text-sm mt-2 flex items-center';
+                appState.previousData = [];
+            }
+            processDataAndUpdateUI();
+        } catch (error) {
+            console.error('Error al cargar datos:', error);
+            // alert('Error al cargar datos. Por favor intente nuevamente.'); // Ya manejado en onAuthStateChanged
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function fetchOrdersData(startDate, endDate) {
+        // Asegurarse de que startDate y endDate sean objetos Date válidos
+        if (!(startDate instanceof Date) || !(endDate instanceof Date) || isNaN(startDate) || isNaN(endDate)) {
+            console.error("fetchOrdersData recibió fechas inválidas:", startDate, endDate);
+            return []; // Retornar arreglo vacío si las fechas no son válidas
+        }
+        const startStr = startDate.toISOString().split('T')[0];
+        const endStr = endDate.toISOString().split('T')[0];
+        
+        const snapshot = await database.ref('orders').orderByKey().startAt(startStr).endAt(endStr).once('value');
+        const ordersData = snapshot.val();
+        const filteredOrders = [];
+        
+        if (ordersData) {
+            for (const dateKey in ordersData) {
+                // Doble verificación, aunque Firebase ya debería haber filtrado por rango
+                // if (dateKey >= startStr && dateKey <= endStr) { 
+                    const ordersForDate = ordersData[dateKey];
+                    for (const orderId in ordersForDate) {
+                        const order = ordersForDate[orderId];
+                        if (order.items && typeof order.items === 'object' && !Array.isArray(order.items)) {
+                            order.items = Object.values(order.items);
+                        } else if (!order.items) {
+                            order.items = []; 
+                        }
+                        filteredOrders.push({ ...order, date: dateKey, orderId: orderId });
+                    }
+                // }
             }
         }
+        return filteredOrders;
+    }
 
-        // Función para procesar productos más vendidos
-        function processBestSellers(orders) {
-            // Resetear contadores
-            appState.bestSellers = {
-                tacos: {},
-                burritos: {},
-                bebidas: {}
-            };
-            
-            // Contar productos vendidos
-            orders.forEach(order => {
-                order.items.forEach(item => {
-                    let category;
-                    
-                    // Determinar categoría del producto
-                    if (item.name.toLowerCase().includes('taco') || item.name.toLowerCase().includes('tacos')) {
-                        category = 'tacos';
-                    } else if (item.name.toLowerCase().includes('burrito')) {
-                        category = 'burritos';
-                    } else {
-                        category = 'bebidas';
-                    }
-                    
-                    // Incrementar contador
-                    if (!appState.bestSellers[category][item.name]) {
-                        appState.bestSellers[category][item.name] = {
-                            count: 1,
-                            price: item.price
-                        };
-                    } else {
-                        appState.bestSellers[category][item.name].count++;
-                    }
-                });
-            });
-            
-            // Encontrar los más vendidos de cada categoría
-            const bestTaco = findBestSeller('tacos');
-            const bestBurrito = findBestSeller('burritos');
-            const bestDrink = findBestSeller('bebidas');
-            
-            // Actualizar UI
-            document.getElementById('best-taco').textContent = bestTaco.name || '-';
-            document.getElementById('best-taco-sales').textContent = bestTaco.count ? `${bestTaco.count} vendidos` : '0 vendidos';
-            
-            document.getElementById('best-burrito').textContent = bestBurrito.name || '-';
-            document.getElementById('best-burrito-sales').textContent = bestBurrito.count ? `${bestBurrito.count} vendidos` : '0 vendidos';
-            
-            document.getElementById('best-drink').textContent = bestDrink.name || '-';
-            document.getElementById('best-drink-sales').textContent = bestDrink.count ? `${bestDrink.count} vendidos` : '0 vendidos';
-        }
-
-        // Función para encontrar el producto más vendido en una categoría
-        function findBestSeller(category) {
-            const sellers = appState.bestSellers[category];
-            let bestSeller = { name: null, count: 0 };
-            
-            Object.keys(sellers).forEach(name => {
-                if (sellers[name].count > bestSeller.count) {
-                    bestSeller = {
-                        name: name,
-                        count: sellers[name].count,
-                        price: sellers[name].price
-                    };
-                }
-            });
-            
-            return bestSeller;
-        }
-
-        // Función para procesar datos para gráficos
-        function processChartData(orders) {
-            // Datos para gráfico de ventas por día
-            const salesByDay = {};
-            const ordersByDay = {};
-            
-            // Datos para gráfico de categorías
-            const salesByCategory = {
-                tacos: 0,
-                burritos: 0,
-                bebidas: 0
-            };
-            
-            // Datos para gráfico de horas pico
-            const ordersByHour = Array(24).fill(0);
-            
-            orders.forEach(order => {
-                // Procesar por día
-                const orderDate = new Date(order.date);
-                const dayKey = orderDate.toLocaleDateString('es-MX', { weekday: 'short' });
-                
-                if (!salesByDay[dayKey]) {
-                    salesByDay[dayKey] = 0;
-                    ordersByDay[dayKey] = 0;
-                }
-                
-                salesByDay[dayKey] += order.total;
-                ordersByDay[dayKey]++;
-                
-                // Procesar por categoría
-                order.items.forEach(item => {
-                    if (item.name.toLowerCase().includes('taco') || item.name.toLowerCase().includes('tacos')) {
-                        salesByCategory.tacos += item.price;
-                    } else if (item.name.toLowerCase().includes('burrito')) {
-                        salesByCategory.burritos += item.price;
-                    } else {
-                        salesByCategory.bebidas += item.price;
-                    }
-                });
-                
-                // Procesar por hora
-                const timestamp = order.timestamp;
-                if (timestamp) {
-                    const orderTime = new Date(timestamp);
-                    const hour = orderTime.getHours();
-                    ordersByHour[hour]++;
-                }
-            });
-            
-            // Actualizar gráficos
-            updateSalesChart(Object.keys(salesByDay), Object.values(salesByDay));
-            updateCategoryChart(Object.keys(salesByCategory), Object.values(salesByCategory));
-            updatePeakHoursChart(ordersByHour);
-        }
-
-        // Función para actualizar gráfico de ventas
-        function updateSalesChart(labels, data) {
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            
-            // Destruir gráfico anterior si existe
-            if (salesChart) {
-                salesChart.destroy();
+    function processDataAndUpdateUI() {
+        const orders = appState.ordersData;
+        const previousOrders = appState.previousData;
+        
+        const totalSales = orders.reduce((sum, order) => sum + (order.total || 0), 0); 
+        const totalOrders = orders.length;
+        let totalProducts = 0;
+        orders.forEach(order => {
+            if (order.items && Array.isArray(order.items)) {
+                totalProducts += order.items.reduce((sum, item) => sum + (item.quantity || 0), 0); // Sumar cantidades de items
             }
-            
-            salesChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Ventas',
-                        data: data,
-                        backgroundColor: 'rgba(217, 119, 6, 0.7)',
-                        borderColor: 'rgba(217, 119, 6, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return formatMoney(context.raw);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return formatMoney(value);
-                                }
-                            }
-                        }
-                    }
+        });
+        const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
+        
+        let previousTotalSales = 0, previousTotalOrders = 0, previousTotalProducts = 0, previousAverageTicket = 0;
+        if (previousOrders.length > 0) {
+            previousTotalSales = previousOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+            previousTotalOrders = previousOrders.length;
+            previousOrders.forEach(order => {
+                if (order.items && Array.isArray(order.items)) {
+                     previousTotalProducts += order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
                 }
             });
+            previousAverageTicket = previousTotalOrders > 0 ? previousTotalSales / previousTotalOrders : 0;
         }
+        
+        const salesChange = previousTotalSales > 0 ? ((totalSales - previousTotalSales) / previousTotalSales * 100) : (totalSales > 0 ? 100 : 0);
+        const ordersChange = previousTotalOrders > 0 ? ((totalOrders - previousTotalOrders) / previousTotalOrders * 100) : (totalOrders > 0 ? 100 : 0);
+        const productsChange = previousTotalProducts > 0 ? ((totalProducts - previousTotalProducts) / previousTotalProducts * 100) : (totalProducts > 0 ? 100 : 0);
+        const ticketChange = previousAverageTicket > 0 ? ((averageTicket - previousAverageTicket) / previousAverageTicket * 100) : (averageTicket > 0 ? 100 : 0);
+        
+        document.getElementById('total-sales').textContent = formatMoney(totalSales);
+        document.getElementById('total-orders').textContent = totalOrders;
+        document.getElementById('total-products').textContent = totalProducts;
+        document.getElementById('average-ticket').textContent = formatMoney(averageTicket);
+        
+        updateChangeIndicator('sales-change', salesChange.toFixed(1));
+        updateChangeIndicator('orders-change', ordersChange.toFixed(1));
+        updateChangeIndicator('products-change', productsChange.toFixed(1));
+        updateChangeIndicator('ticket-change', ticketChange.toFixed(1));
+        
+        processOrdersByIndividualTable(orders); 
+        processChartData(orders); 
+        processTablesPerformance(orders, totalSales); 
+    }
 
-        // Función para actualizar gráfico de categorías
-        function updateCategoryChart(labels, data) {
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            const backgroundColors = [
-                'rgba(217, 119, 6, 0.7)',  // Ámbar para tacos
-                'rgba(220, 38, 38, 0.7)',  // Rojo para burritos
-                'rgba(59, 130, 246, 0.7)'  // Azul para bebidas
-            ];
-            
-            // Destruir gráfico anterior si existe
-            if (categoryChart) {
-                categoryChart.destroy();
+    function updateChangeIndicator(elementId, changePercent) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        const change = parseFloat(changePercent);
+        let iconClass = 'fa-equals'; let colorClass = 'text-gray-400';
+        if (change > 0) { iconClass = 'fa-caret-up'; colorClass = 'text-green-400'; }
+        else if (change < 0) { iconClass = 'fa-caret-down'; colorClass = 'text-red-400'; }
+        element.innerHTML = `<i class="fas ${iconClass} mr-1"></i> ${Math.abs(change)}%`;
+        element.className = `${colorClass} text-sm mt-2 flex items-center`;
+    }
+
+    function processOrdersByIndividualTable(orders) {
+        appState.ordersByIndividualTable = {};
+        orders.forEach(order => {
+            const table = order.table || 'Takeout'; // Asume 'Takeout' si no hay mesa
+            if (!appState.ordersByIndividualTable[table]) {
+                appState.ordersByIndividualTable[table] = 0;
             }
-            
-            categoryChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${context.label}: ${formatMoney(value)} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+            appState.ordersByIndividualTable[table]++;
+        });
+        updateOrdersByIndividualTableUI(appState.ordersByIndividualTable);
+    }
+
+    function updateOrdersByIndividualTableUI(data) {
+        const container = document.getElementById('orders-by-table-cards');
+        if(!container) return;
+        container.innerHTML = ''; 
+        const sortedTables = Object.keys(data).sort((a, b) => data[b] - data[a]); 
+        sortedTables.forEach(table => {
+            const card = document.createElement('div');
+            card.className = 'stats-card p-4 glow-on-hover';
+            card.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 text-sm">Mesa #${table}</p>
+                        <h3 class="text-2xl font-bold mt-1">${data[table]}</h3>
+                        <p class="text-gray-400 text-sm">órdenes</p>
+                    </div>
+                    <div class="bg-blue-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-chair text-blue-500 text-xl"></i>
+                    </div>
+                </div>`;
+            container.appendChild(card);
+        });
+        if (sortedTables.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-center col-span-full py-4">No hay órdenes por mesa en este período.</p>';
         }
+    }
 
-        // Función para actualizar gráfico de horas pico
-        function updatePeakHoursChart(data) {
-            const ctx = document.getElementById('peakHoursChart').getContext('2d');
-            const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
-            
-            // Destruir gráfico anterior si existe
-            if (peakHoursChart)         peakHoursChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Órdenes por hora',
-                    data: data,
-                    backgroundColor: 'rgba(217, 119, 6, 0.2)',
-                    borderColor: 'rgba(217, 119, 6, 1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
+    function processChartData(orders) {
+        const salesByDay = {}; const ordersByHour = Array(24).fill(0);
+        orders.forEach(order => {
+            const orderDateVal = order.date.includes('T') ? order.date.split('T')[0] : order.date; // Manejar si ya tiene T00:00:00
+            const orderDate = new Date(orderDateVal + 'T00:00:00'); // Asegurar que se interprete como local al inicio del día
+            const dayKey = orderDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }); 
+            if (!salesByDay[dayKey]) salesByDay[dayKey] = 0;
+            salesByDay[dayKey] += (order.total || 0);
+            const timestamp = order.timestamp;
+            if (timestamp) {
+                const orderTime = new Date(timestamp);
+                ordersByHour[orderTime.getHours()]++;
             }
+        });
+        updateSalesChart(Object.keys(salesByDay), Object.values(salesByDay));
+        updatePeakHoursChart(ordersByHour);
+    }
+
+    function updateSalesChart(labels, data) {
+        const ctx = document.getElementById('salesChart')?.getContext('2d');
+        if (!ctx) return;
+        if (salesChart) salesChart.destroy();
+        salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Ventas', data, backgroundColor: 'rgba(217, 119, 6, 0.7)', borderColor: 'rgba(217, 119, 6, 1)', borderWidth: 1, borderRadius: 4 }] },
+            options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => formatMoney(c.raw) }}}, scales: { y: { beginAtZero: true, ticks: { callback: v => formatMoney(v) }}} }
         });
     }
 
-    // Función para procesar desempeño por mesas
+    function updatePeakHoursChart(data) {
+        const ctx = document.getElementById('peakHoursChart')?.getContext('2d');
+        if (!ctx) return;
+        const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+        if (peakHoursChart) peakHoursChart.destroy();
+        peakHoursChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Órdenes por hora', data, backgroundColor: 'rgba(217, 119, 6, 0.2)', borderColor: 'rgba(217, 119, 6, 1)', borderWidth: 2, tension: 0.4, fill: true }] },
+            options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true, ticks: { precision: 0 }}}}
+        });
+    }
+
     function processTablesPerformance(orders, totalSales) {
         const tablesData = {};
-        
-        // Contar órdenes y ventas por mesa
         orders.forEach(order => {
             const table = order.table || 'Takeout';
-            
-            if (!tablesData[table]) {
-                tablesData[table] = {
-                    orders: 0,
-                    sales: 0
-                };
-            }
-            
+            if (!tablesData[table]) tablesData[table] = { orders: 0, sales: 0 };
             tablesData[table].orders++;
-            tablesData[table].sales += order.total;
+            tablesData[table].sales += (order.total || 0); 
         });
-        
-        // Calcular promedios y porcentajes
         const tablesArray = Object.keys(tablesData).map(table => {
-            const data = tablesData[table];
-            const average = data.orders > 0 ? data.sales / data.orders : 0;
-            const percentage = totalSales > 0 ? (data.sales / totalSales * 100) : 0;
-            
-            return {
-                table,
-                orders: data.orders,
-                sales: data.sales,
-                average,
-                percentage
-            };
+            const d = tablesData[table]; const avg = d.orders > 0 ? d.sales / d.orders : 0;
+            return { table, orders: d.orders, sales: d.sales, average: avg, percentage: totalSales > 0 ? (d.sales / totalSales * 100) : 0 };
         });
-        
-        // Ordenar por ventas descendentes
         tablesArray.sort((a, b) => b.sales - a.sales);
-        
-        // Actualizar tabla en la UI
         updateTablesPerformanceUI(tablesArray);
     }
 
-    // Función para actualizar la tabla de desempeño de mesas
     function updateTablesPerformanceUI(tablesData) {
         const tbody = document.getElementById('tables-performance');
+        if(!tbody) return;
         tbody.innerHTML = '';
-        
         tablesData.forEach(data => {
             const row = document.createElement('tr');
             row.className = 'border-b border-gray-700 hover:bg-gray-700';
-            
             row.innerHTML = `
-                <td class="py-3 px-4 font-medium">${data.table}</td>
-                <td class="py-3 px-4">${data.orders}</td>
-                <td class="py-3 px-4">${formatMoney(data.sales)}</td>
-                <td class="py-3 px-4">${formatMoney(data.average)}</td>
+                <td class="py-3 px-4 font-medium">${data.table}</td> <td class="py-3 px-4">${data.orders}</td>
+                <td class="py-3 px-4">${formatMoney(data.sales)}</td> <td class="py-3 px-4">${formatMoney(data.average)}</td>
                 <td class="py-3 px-4">
-                    <div class="w-full bg-gray-600 rounded-full h-2">
-                        <div class="bg-amber-500 h-2 rounded-full" style="width: ${data.percentage}%"></div>
-                    </div>
+                    <div class="w-full bg-gray-600 rounded-full h-2"><div class="bg-amber-500 h-2 rounded-full" style="width: ${data.percentage.toFixed(1)}%"></div></div>
                     <span class="text-xs">${data.percentage.toFixed(1)}%</span>
-                </td>
-            `;
-            
+                </td>`;
             tbody.appendChild(row);
         });
     }
 
-    // Función para mostrar estado de carga
-    function showLoading() {
-        // Implementar lógica de loading si es necesario
-    }
+    function showLoading() { /* Implementar si es necesario */ }
+    function hideLoading() { /* Implementar si es necesario */ }
 
-    // Función para ocultar estado de carga
-    function hideLoading() {
-        // Implementar lógica de loading si es necesario
-    }
-
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', () => {
-        // Actualizar fecha actual
+    // --- Función para inicializar el dashboard y sus listeners ---
+    function initializeDashboard() {
         updateCurrentDate();
+        loadData('hoy'); // Carga inicial de datos
         
-        // Cargar datos iniciales (hoy)
-        loadData('hoy');
-        
-        // Configurar event listeners para los botones de timeframe
         document.querySelectorAll('.timeframe-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const timeframe = btn.dataset.timeframe;
-                
                 if (timeframe === 'personalizado') {
                     document.getElementById('date-range-modal').classList.remove('hidden');
                 } else {
@@ -998,39 +695,49 @@
             });
         });
         
-        // Configurar event listeners para el modal de rango de fechas
-        document.getElementById('cancel-date-range').addEventListener('click', () => {
-            document.getElementById('date-range-modal').classList.add('hidden');
-        });
-        
-        document.getElementById('apply-date-range').addEventListener('click', () => {
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
-            
-            if (startDate && endDate) {
-                appState.startDate = new Date(startDate);
-                appState.endDate = new Date(endDate);
-                appState.currentTimeframe = 'personalizado';
-                
+        const cancelDateRangeBtn = document.getElementById('cancel-date-range');
+        if (cancelDateRangeBtn) {
+            cancelDateRangeBtn.addEventListener('click', () => {
                 document.getElementById('date-range-modal').classList.add('hidden');
-                loadData('personalizado');
-            } else {
-                alert('Por favor seleccione ambas fechas');
-            }
-        });
+            });
+        }
         
-        // Configurar event listeners para la barra de navegación inferior
+        const applyDateRangeBtn = document.getElementById('apply-date-range');
+        if (applyDateRangeBtn) {
+            applyDateRangeBtn.addEventListener('click', () => {
+                const startDateInput = document.getElementById('start-date').value;
+                const endDateInput = document.getElementById('end-date').value;
+                if (startDateInput && endDateInput) {
+                    appState.startDate = new Date(startDateInput + 'T00:00:00'); // Especificar hora para evitar problemas de zona
+                    appState.endDate = new Date(endDateInput + 'T23:59:59');   // Especificar hora para evitar problemas de zona
+                    if (appState.startDate > appState.endDate) {
+                        alert('La fecha de inicio no puede ser posterior a la fecha de fin.'); return;
+                    }
+                    appState.currentTimeframe = 'personalizado';
+                    document.getElementById('date-range-modal').classList.add('hidden');
+                    loadData('personalizado');
+                } else {
+                    alert('Por favor seleccione ambas fechas');
+                }
+            });
+        }
+        
         document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (event) => {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                // Aquí iría la lógica para cambiar de vista
+                event.currentTarget.classList.add('active');
             });
         });
-    });
 
-    // Configurar el primer botón de navegación como activo
-    document.querySelector('.nav-btn[data-tab="dashboard"]').classList.add('active');
+        // El botón de dashboard ya está activo por defecto en el HTML
+        // const dashboardButton = document.querySelector('.nav-btn[data-tab="dashboard"]');
+        // if (dashboardButton && !dashboardButton.classList.contains('active')) { // Evitar re-activar si ya lo está
+        //    dashboardButton.classList.add('active');
+        // }
+    }
+
+    // La inicialización del dashboard (initializeDashboard()) se llama ahora
+    // dentro del chequeo de onAuthStateChanged si el usuario es gerente.
 </script>
 </body>
 </html>
