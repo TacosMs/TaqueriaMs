@@ -14,7 +14,7 @@
         }
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f0f0f0; /* Un fondo claro para la página de prueba */
+            background-color: #f0f0f0;
             color: #333;
             padding: 20px;
         }
@@ -39,114 +39,127 @@
         .test-button:hover {
             background-color: #b65c04;
         }
+        /* Tailwind 'hidden' class for reference: .hidden { display: none; } */
 
         /* ESTILOS PARA LA IMPRESIÓN */
         @media print {
-            body * {
-                visibility: hidden; /* Oculta todo en la página por defecto */
+            body.printing * { /* Apply hiding rules when body has 'printing' class */
+                visibility: hidden;
             }
-            #printable-receipt, #printable-receipt * {
-                visibility: visible; /* Muestra solo el ticket y su contenido */
+
+            /* Hide elements specifically marked as no-print */
+            .no-print {
+                display: none !important;
             }
+
             #printable-receipt {
+                display: block !important; /* Crucial: Overrides Tailwind's .hidden */
+                visibility: visible !important;
                 position: absolute;
                 left: 0;
                 top: 0;
-                width: 80mm; /* Ancho típico de ticket, o ajusta a '280px' o '300px' */
-                               /* Para hoja A4/Carta, esto se imprimirá como una columna */
+                width: 80mm; /* O ajusta a '280px' o '300px' */
                 margin: 0;
                 padding: 5mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 10pt;
-                color: #000;
-                background-color: #fff;
-                box-sizing: border-box;
-                border: 1px solid #ccc; /* Borde opcional para ver el área en la vista previa */
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 10pt !important;
+                color: #000 !important;
+                background-color: #fff !important; /* Asegura fondo blanco */
+                box-sizing: border-box !important;
+                border: 1px solid #000; /* Borde negro para que sea visible si es solo el cuadro */
             }
-            #printable-receipt h1, 
+
+            #printable-receipt *, #printable-receipt *::before, #printable-receipt *::after {
+                visibility: visible !important;
+                color: #000 !important;
+                background-color: transparent !important; /* Hijos con fondo transparente */
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: inherit !important; /* Hereda tamaño de fuente del padre */
+            }
+
+            #printable-receipt h1,
             #printable-receipt h2,
-            #printable-receipt h3 {
-                text-align: center;
-                margin: 5px 0;
-                color: #000;
+            #printable-receipt h3,
+            #printable-receipt p,
+            #printable-receipt div,
+            #printable-receipt span {
+                 /* Asegura que estos elementos no tengan estilos extra que los oculten o coloreen de gris */
+                box-shadow: none !important;
+                text-shadow: none !important;
             }
+
+            #printable-receipt h1 { font-size: 14pt !important; font-weight: bold !important; text-align: center;}
+            #printable-receipt p { margin: 2px 0 !important; font-size: 9pt !important;}
             #printable-receipt hr {
-                border: none;
-                border-top: 1px dashed #000;
-                margin: 5px 0;
+                border: none !important;
+                border-top: 1px dashed #000 !important;
+                margin: 5px 0 !important;
+                visibility: visible !important; /* Asegura que hr sea visible */
+                display: block !important; /* Asegura que hr se muestre */
             }
-            #printable-receipt h1 { font-size: 14pt; font-weight: bold; }
-            #printable-receipt h2 { font-size: 10pt; }
-            #printable-receipt h3 { font-size: 10pt; font-weight: bold; border-top: 1px dashed #000; border-bottom: 1px dashed #000; margin-top: 10px; padding: 5px 0;}
-            #printable-receipt p { margin: 2px 0; color: #000; font-size: 9pt;}
             #printable-receipt .receipt-item {
-                display: flex;
-                justify-content: space-between;
-                margin: 3px 0;
-                font-size: 9pt;
+                display: flex !important;
+                justify-content: space-between !important;
+                margin: 3px 0 !important;
+                font-size: 9pt !important;
             }
             #printable-receipt .receipt-item .item-name {
-                flex-grow: 1;
-                text-align: left;
-                /* word-break: break-all; */ /* Descomentar si los nombres son muy largos */
+                flex-grow: 1 !important;
+                text-align: left !important;
             }
             #printable-receipt .item-qty {
-                width: 35px;
-                text-align: right;
-                padding-right: 5px;
-                flex-shrink: 0;
+                width: 35px !important;
+                text-align: right !important;
+                padding-right: 5px !important;
+                flex-shrink: 0 !important;
             }
             #printable-receipt .item-total {
-                width: 55px;
-                text-align: right;
-                flex-shrink: 0;
+                width: 55px !important;
+                text-align: right !important;
+                flex-shrink: 0 !important;
             }
             #printable-receipt .receipt-customizations {
-                font-size: 8pt;
-                padding-left: 10px;
-                color: #333;
-                margin: 1px 0 3px 0;
+                font-size: 8pt !important;
+                padding-left: 10px !important;
+                color: #333 !important; /* Un gris oscuro para diferenciarse, pero no el gris del contenedor */
+                margin: 1px 0 3px 0 !important;
             }
             #printable-receipt .receipt-total {
-                display: flex;
-                justify-content: space-between;
-                font-weight: bold;
-                font-size: 11pt;
-                margin-top: 8px;
-                padding-top: 5px;
+                display: flex !important;
+                justify-content: space-between !important;
+                font-weight: bold !important;
+                font-size: 11pt !important;
+                margin-top: 8px !important;
+                padding-top: 5px !important;
             }
             #printable-receipt .footer-message {
-                text-align: center;
-                margin-top: 15px;
-                font-size: 8pt;
-            }
-            /* Oculta el botón de prueba en la impresión */
-            .no-print {
-                display: none !important;
+                text-align: center !important;
+                margin-top: 15px !important;
+                font-size: 8pt !important;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="container no-print">
         <h1 class="text-2xl font-bold text-center mb-6 text-amber-600">Prueba de Impresión de Ticket</h1>
         <p class="text-center mb-4">
             Este es un ejemplo para probar cómo se vería un ticket impreso desde el sistema de punto de venta.
             Al hacer clic en el botón, se generará un ticket de ejemplo y se abrirá el diálogo de impresión de tu navegador.
         </p>
         <div class="text-center">
-            <button id="test-print-button" class="test-button no-print">
+            <button id="test-print-button" class="test-button">
                 <i class="fas fa-print mr-2"></i>Generar e Imprimir Ticket de Prueba
             </button>
         </div>
+        <p class="mt-4 text-sm text-gray-600">Si ves un cuadro gris al imprimir, asegúrate de que en la configuración de impresión de tu navegador (en el diálogo de impresión) no esté activada alguna opción como "Imprimir solo selección" o que "Imprimir gráficos de fondo" esté desactivada si eso afecta el contenido.</p>
     </div>
 
     <div id="printable-receipt" class="hidden">
         </div>
 
 <script>
-    // Datos de ejemplo para la orden (simulando appState.orders[table])
     const sampleOrderData = [
         { id: 1, name: "Taco de Bistec", price: 30, quantity: 2, customizations: { ingredients: ["salsa-roja", "cebolla"], notes: "Bien dorado" } },
         { id: 2, name: "Taco de Longaniza", price: 30, quantity: 3, customizations: { ingredients: ["salsa-verde"], notes: "" } },
@@ -187,7 +200,6 @@
             <hr>
         `;
 
-        // No es necesario agrupar aquí si sampleOrderData ya tiene 'quantity'
         let calculatedTotal = 0;
         orderItems.forEach(item => {
             const itemTotal = item.price * item.quantity;
@@ -229,19 +241,23 @@
         `;
 
         printableArea.innerHTML = receiptHTML;
-        // printableArea.classList.remove('hidden'); // No es estrictamente necesario si @media print lo maneja
+        
+        // Preparamos el body y el área imprimible para la impresión
+        document.body.classList.add('printing'); // Ayuda a los estilos @media print a ser más específicos
+        printableArea.classList.remove('hidden'); // Quitamos la clase .hidden de Tailwind
 
         window.print(); // Abre el diálogo de impresión
 
-        // Opcional: limpiar después de imprimir para no afectar la página si se vuelve a interactuar
-        // setTimeout(() => {
-        //    printableArea.innerHTML = '';
-        // }, 1000);
+        // Limpiamos después de imprimir
+        // Usar un pequeño retardo o el evento onafterprint (este último tiene soporte variable)
+        setTimeout(() => {
+            printableArea.classList.add('hidden'); // Volvemos a ocultar el área
+            document.body.classList.remove('printing');
+            // printableArea.innerHTML = ''; // Opcional: limpiar el contenido si no se va a reusar inmediatamente
+        }, 300); // Un retardo corto
     }
 
     document.getElementById('test-print-button').addEventListener('click', () => {
-        // Llamamos a la función con datos de ejemplo
-        // Simulamos que es la mesa 5
         printReceiptContent(5, sampleOrderData);
     });
 </script>
