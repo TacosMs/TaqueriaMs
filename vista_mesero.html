@@ -765,7 +765,6 @@
         }, 300); 
     }
 
-    // FUNCIÓN PARA ENVIAR TICKET POR CORREO (CON INSTRUCCIONES CLARAS PARA ADJUNTAR PDF)
     function sendTicketByEmail(tableNumber, paymentMethod = "No especificado") {
         const orderItems = appState.orders[tableNumber];
         if (!orderItems || orderItems.length === 0) {
@@ -783,11 +782,9 @@
             return;
         }
 
-        // PASO 1: Generar y descargar el PDF
         alert("PASO 1: Se generará el PDF del ticket. Tu navegador te pedirá que guardes el archivo. RECUERDA DÓNDE LO GUARDAS, ya que lo necesitarás para el siguiente paso.");
-        generatePDFTicket(tableNumber, paymentMethod); // Esta función ya incluye doc.save()
+        generatePDFTicket(tableNumber, paymentMethod); 
 
-        // PASO 2: Preparar el enlace mailto con instrucciones claras
         const subject = `Ticket Taquería MS - Mesa #${tableNumber}`;
         const bodyMessage = `Estimado cliente,\n\nEl PDF de su ticket para la Mesa #${tableNumber} se ha generado y debería haberse descargado en su dispositivo.\n\nACCIÓN REQUERIDA: Por favor, ADJUNTE MANUALMENTE el archivo PDF (generalmente llamado 'TaqueriaMS_Mesa${tableNumber}_...pdf') a este correo antes de enviarlo.\n\n¡Gracias por su preferencia!\nTaquería MS`;
         
@@ -796,14 +793,13 @@
         console.log("Generated mailto link (for manual PDF attachment):", mailtoLink);
 
         try {
-            // Pequeña demora para dar tiempo a que la descarga del PDF se inicie o sea procesada por el navegador
             setTimeout(() => {
                 window.location.href = mailtoLink;
                 alert("PASO 2: Se intentará abrir tu aplicación de correo. En el borrador del correo, DEBERÁS ADJUNTAR MANUALMENTE el archivo PDF que guardaste en el PASO 1 y luego enviar el mensaje.");
-            }, 1000); // Espera 1 segundo
+            }, 1000); 
         } catch (e) {
             console.error("Error al intentar abrir mailto link:", e);
-            alert("Ocurrió un error al intentar abrir tu aplicación de correo. Asegúrate de tener un cliente de correo configurado. El PDF del ticket se ha descargado para que puedas adjuntarlo manualmente.");
+            alert("Ocurrió un error al intentar abrir tu aplicación de correo. Asegúrate de tener un cliente de correo configurado. El PDF del ticket se ha descargado para que puedas adjuntarlo manually.");
         }
     }
 
@@ -903,7 +899,19 @@
         }
     }
 
-    function generatePDFTicket(table, paymentMethod) { 
+    // MODIFIED generatePDFTicket function
+    function generatePDFTicket(table, paymentMethod) {
+        console.log(`[generatePDFTicket] Iniciando para Mesa: ${table}, Pago: ${paymentMethod}`);
+        // Clon profundo para logging, evita modificar el original si el log se expande después
+        console.log(`[generatePDFTicket] Estado actual de appState.orders[${table}]:`, JSON.parse(JSON.stringify(appState.orders[table] || [])));
+
+        const items = appState.orders[table] || [];
+        if (items.length === 0) {
+            alert(`No hay items en la orden para la mesa #${table} para generar el PDF.`);
+            console.warn(`[generatePDFTicket] No se encontraron items para la mesa ${table}.`);
+            return; // Salir si no hay items para evitar errores.
+        }
+
         const doc = new jsPDF();
         doc.setFont('helvetica');
         doc.setFontSize(24); doc.setTextColor(217, 119, 6); doc.text('TAQUERÍA MS', 105, 20, { align: 'center' });
@@ -918,10 +926,8 @@
         const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
         doc.text(`Fecha: ${dateStr}`, 15, 51); 
         doc.text(`Hora: ${timeStr}`, 15, 57);
-
         doc.setFontSize(11); doc.setTextColor(40, 40, 40); 
         doc.text(`Método de Pago: ${paymentMethod}`, 15, 63); 
-
         doc.setDrawColor(200, 200, 200); doc.line(15, 68, 195, 68); 
         
         doc.setFontSize(12); doc.setTextColor(255, 255, 255); doc.setFillColor(217, 119, 6);
@@ -930,18 +936,47 @@
         doc.text('Cant.', 140, 76); 
         doc.text('Total', 170, 76); 
         
-        const items = appState.orders[table] || []; 
         let yPos = 84; 
-
         const groupedItems = {};
+        console.log("[generatePDFTicket] Items individuales a agrupar:", JSON.parse(JSON.stringify(items)));
+
         items.forEach(item => {
+            if (!item || typeof item.name === 'undefined' || typeof item.price === 'undefined') {
+                console.error("[generatePDFTicket] Item inválido encontrado en la orden, será omitido:", item);
+                return; // Omite este item malformado
+            }
             const key = `${item.name}-${JSON.stringify(item.customizations || {})}`;
-            if (!groupedItems[key]) groupedItems[key] = { ...item, quantity: 0, price: item.price }; 
-            else groupedItems[key].quantity++;
+            if (!groupedItems[key]) {
+                groupedItems[key] = { 
+                    name: item.name,
+                    price: parseFloat(item.price) || 0, // Asegurar que el precio es un número
+                    customizations: JSON.parse(JSON.stringify(item.customizations || {})), // Copia profunda
+                    quantity: 0
+                };
+            }
+            groupedItems[key].quantity++;
         });
+        console.log("[generatePDFTicket] Items agrupados:", JSON.parse(JSON.stringify(groupedItems)));
+
         doc.setFontSize(10); doc.setTextColor(40, 40, 40);
-        Object.values(groupedItems).forEach(gItem => { 
-            const itemNameText = doc.splitTextToSize(gItem.name, 110); 
+        if (Object.keys(groupedItems).length === 0 && items.length > 0) {
+            console.warn("[generatePDFTicket] El agrupamiento resultó en 0 grupos, pero había items. Esto indica un problema con la estructura de los items o las claves de agrupación.");
+            doc.text("Error: No se pudieron agrupar los items para mostrar.", 20, yPos); yPos +=10;
+        }
+
+
+        Object.values(groupedItems).forEach(gItem => {
+            console.log("[generatePDFTicket] Renderizando item agrupado para PDF:", gItem);
+            if (!gItem || typeof gItem.name === 'undefined' || typeof gItem.price === 'undefined' || typeof gItem.quantity === 'undefined') {
+                console.error("[generatePDFTicket] Item agrupado inválido, omitiendo renderizado:", gItem);
+                return; 
+            }
+
+            const unitPrice = parseFloat(gItem.price) || 0;
+            const quantity = parseInt(gItem.quantity) || 0;
+            const lineTotal = unitPrice * quantity;
+
+            const itemNameText = doc.splitTextToSize(gItem.name || "Artículo Desconocido", 110); 
             let currentY = yPos;
             itemNameText.forEach((line, i) => {
                 doc.text(line, 20, currentY + (i * 4));
@@ -965,23 +1000,31 @@
                 doc.setFontSize(10); doc.setTextColor(40, 40, 40);
             }
             
-            doc.text(gItem.quantity.toString(), 140, currentY); 
-            doc.text(`$${(gItem.price * gItem.quantity).toFixed(2)}`, 170, currentY); 
+            doc.text(quantity.toString(), 140, currentY); 
+            doc.text(`$${lineTotal.toFixed(2)}`, 170, currentY); 
             
             yPos += Math.max(10, yOffsetForCustomizations + (itemNameText.length > 1 ? 4 : 0)); 
              if (gItem.customizations && (gItem.customizations.ingredients.length > 0 || gItem.customizations.notes)) yPos +=2;
-
         });
+
         doc.setDrawColor(200, 200, 200); doc.line(15, yPos, 195, yPos); yPos += 10;
-        const total = items.reduce((sum, item) => sum + item.price, 0);
-        doc.setFontSize(14); doc.text('TOTAL:', 140, yPos); doc.text(`$${total.toFixed(2)}`, 170, yPos);
+        
+        let calculatedGrandTotal = 0;
+        Object.values(groupedItems).forEach(g => {
+            calculatedGrandTotal += (parseFloat(g.price) || 0) * (parseInt(g.quantity) || 0);
+        });
+        console.log(`[generatePDFTicket] Total General calculado de items agrupados: ${calculatedGrandTotal}`);
+
+        doc.setFontSize(14); doc.text('TOTAL:', 140, yPos); doc.text(`$${calculatedGrandTotal.toFixed(2)}`, 170, yPos);
         yPos += 20; doc.setFontSize(12); doc.setTextColor(217, 119, 6);
         doc.text('¡Gracias por su preferencia!', 105, yPos, { align: 'center' });
         yPos += 10; doc.setFontSize(8); doc.setTextColor(100, 100, 100);
         doc.text('TAQUERÍA MS - Av. Pantitlán 397, Evolución, Nezahualcóyotl', 105, yPos, { align: 'center' });
         doc.text(`Mesa #${table} | ${dateStr} ${timeStr}`, 105, yPos + 5, { align: 'center' });
         doc.save(`TaqueriaMS_Mesa${table}_${now.getTime()}.pdf`);
+        console.log(`[generatePDFTicket] PDF generado y descarga iniciada para Mesa: ${table}`);
     }
+
     function switchTab(tabName) {
         document.querySelectorAll('#main-content > div').forEach(div => div.classList.add('hidden'));
         document.getElementById(`${tabName}-content`).classList.remove('hidden');
