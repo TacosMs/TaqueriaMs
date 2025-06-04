@@ -765,7 +765,7 @@
         }, 300); 
     }
 
-    // FUNCIÓN PARA ENVIAR TICKET POR CORREO (MODIFICADA PARA ADJUNTAR PDF MANUALMENTE)
+    // FUNCIÓN PARA ENVIAR TICKET POR CORREO (CON INSTRUCCIONES CLARAS PARA ADJUNTAR PDF)
     function sendTicketByEmail(tableNumber, paymentMethod = "No especificado") {
         const orderItems = appState.orders[tableNumber];
         if (!orderItems || orderItems.length === 0) {
@@ -773,7 +773,7 @@
             return;
         }
 
-        const email = prompt("Ingrese el correo electrónico para enviar el ticket:", "");
+        const email = prompt("Ingrese el correo electrónico del destinatario:", "");
         if (!email) {
             console.log("Envío de correo cancelado por el usuario o no se ingresó correo.");
             return;
@@ -783,21 +783,24 @@
             return;
         }
 
-        // 1. Generar y descargar el PDF
-        alert("Se generará el PDF del ticket. Por favor, guarda el archivo para poder adjuntarlo al correo.");
+        // PASO 1: Generar y descargar el PDF
+        alert("PASO 1: Se generará el PDF del ticket. Tu navegador te pedirá que guardes el archivo. RECUERDA DÓNDE LO GUARDAS, ya que lo necesitarás para el siguiente paso.");
         generatePDFTicket(tableNumber, paymentMethod); // Esta función ya incluye doc.save()
 
-        // 2. Preparar el enlace mailto con instrucciones
+        // PASO 2: Preparar el enlace mailto con instrucciones claras
         const subject = `Ticket Taquería MS - Mesa #${tableNumber}`;
-        const bodyMessage = `Estimado cliente,\n\nPor favor, encuentre adjunto el ticket (PDF) de su consumo en Taquería MS para la Mesa #${tableNumber}.\n\nDeberá adjuntar manualmente el archivo PDF que se acaba de descargar (generalmente llamado 'TaqueriaMS_Mesa${tableNumber}_...pdf').\n\n¡Gracias por su preferencia!`;
+        const bodyMessage = `Estimado cliente,\n\nEl PDF de su ticket para la Mesa #${tableNumber} se ha generado y debería haberse descargado en su dispositivo.\n\nACCIÓN REQUERIDA: Por favor, ADJUNTE MANUALMENTE el archivo PDF (generalmente llamado 'TaqueriaMS_Mesa${tableNumber}_...pdf') a este correo antes de enviarlo.\n\n¡Gracias por su preferencia!\nTaquería MS`;
         
         const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyMessage)}`;
 
         console.log("Generated mailto link (for manual PDF attachment):", mailtoLink);
 
         try {
-            window.location.href = mailtoLink;
-            alert("Se intentará abrir tu aplicación de correo. Por favor, adjunta el PDF del ticket que se descargó y luego envía el mensaje.");
+            // Pequeña demora para dar tiempo a que la descarga del PDF se inicie o sea procesada por el navegador
+            setTimeout(() => {
+                window.location.href = mailtoLink;
+                alert("PASO 2: Se intentará abrir tu aplicación de correo. En el borrador del correo, DEBERÁS ADJUNTAR MANUALMENTE el archivo PDF que guardaste en el PASO 1 y luego enviar el mensaje.");
+            }, 1000); // Espera 1 segundo
         } catch (e) {
             console.error("Error al intentar abrir mailto link:", e);
             alert("Ocurrió un error al intentar abrir tu aplicación de correo. Asegúrate de tener un cliente de correo configurado. El PDF del ticket se ha descargado para que puedas adjuntarlo manualmente.");
