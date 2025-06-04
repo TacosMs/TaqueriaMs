@@ -111,13 +111,16 @@
         .glow-on-hover { transition: all 0.3s ease; }
         .glow-on-hover:hover { box-shadow: 0 0 15px rgba(217, 119, 6, 0.5); }
         
-        @media (min-width: 768px) {
+        @media (min-width: 768px) { /* md */
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .flex-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        @media (min-width: 1024px) {
-            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        @media (min-width: 1024px) { /* lg */
+            .stats-grid { grid-template-columns: repeat(3, 1fr); } 
             .flex-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+         @media (min-width: 1280px) { /* xl */
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
         }
     </style>
 </head>
@@ -156,6 +159,36 @@
                     </div>
                     <div class="bg-amber-500 bg-opacity-20 p-3 rounded-full">
                         <i class="fas fa-dollar-sign text-amber-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-card p-5 glow-on-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-sm">Ventas en Efectivo</p>
+                        <h3 class="text-2xl font-bold mt-1" id="total-cash-sales">$0</h3>
+                        <p class="text-green-400 text-sm mt-2 flex items-center" id="cash-sales-change">
+                            <i class="fas fa-caret-up mr-1"></i> 0% 
+                        </p>
+                    </div>
+                    <div class="bg-emerald-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-money-bill-wave text-emerald-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card p-5 glow-on-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-sm">Ventas con Tarjeta</p>
+                        <h3 class="text-2xl font-bold mt-1" id="total-card-sales">$0</h3>
+                        <p class="text-green-400 text-sm mt-2 flex items-center" id="card-sales-change">
+                             <i class="fas fa-caret-up mr-1"></i> 0%
+                        </p>
+                    </div>
+                    <div class="bg-sky-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-credit-card text-sky-500 text-xl"></i>
                     </div>
                 </div>
             </div>
@@ -211,6 +244,13 @@
         </h2>
         <div class="chart-container mb-6 glow-on-hover">
             <canvas id="salesChart"></canvas>
+        </div>
+
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-pie-chart text-amber-500 mr-2"></i> Distribución de Métodos de Pago
+        </h2>
+        <div class="chart-container mb-6 glow-on-hover">
+            <canvas id="paymentMethodDistributionChart"></canvas>
         </div>
         
         <h2 class="text-xl font-bold mb-4 flex items-center">
@@ -280,7 +320,7 @@
     </div>
 
 <script>
-    // Configuración de Firebase (LA MISMA QUE USASTE EN login.html Y inventario.html)
+    // Configuración de Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDi4WBHRGgXMp_rtPvV9IDw3foEjtr0L2o",
         authDomain: "tacosms-acbb2.firebaseapp.com",
@@ -291,45 +331,30 @@
         appId: "1:701143542092:web:29f1d59ffe2751a3c207e9"
     };
 
-    // Inicializar Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const database = firebase.database();
-    const auth = firebase.auth(); // Inicializar Firebase Auth
+    const auth = firebase.auth(); 
 
-    // --- Protección de Ruta y Lógica de Logout ---
     const mainContent = document.getElementById('mainContent');
 
     auth.onAuthStateChanged(user => {
         if (user) {
-            // Usuario está logueado.
-            console.log("Usuario autenticado:", user.uid);
-            // Verificar rol (opcional aquí, pero bueno para consistencia si esta es solo para gerentes)
             database.ref('/userRoles/' + user.uid + '/role').once('value').then(snapshot => {
                 const role = snapshot.val();
                 if (role === 'gerente') {
-                    console.log("Rol verificado: gerente. Mostrando contenido.");
-                    mainContent.classList.remove('opacity-0'); // Muestra el contenido
-                    initializeDashboard(); // Llama a la función que inicializa el dashboard
+                    mainContent.classList.remove('opacity-0'); 
+                    initializeDashboard(); 
                 } else {
-                    console.warn("Rol no autorizado para esta vista:", role);
                     alert("No tienes permiso para acceder a esta página.");
-                    auth.signOut().then(() => {
-                        window.location.href = 'login.html';
-                    });
+                    auth.signOut().then(() => { window.location.href = 'login.html'; });
                 }
             }).catch(error => {
-                console.error("Error al verificar rol:", error);
                 alert("Error al verificar tu rol. Se cerrará la sesión.");
-                auth.signOut().then(() => {
-                    window.location.href = 'login.html';
-                });
+                auth.signOut().then(() => { window.location.href = 'login.html'; });
             });
-
         } else {
-            // No hay usuario logueado. Redirigir a login.html
-            console.log("Usuario no autenticado, redirigiendo a login.html...");
             window.location.href = 'login.html';
         }
     });
@@ -338,19 +363,15 @@
     if (logoutButton) {
         logoutButton.addEventListener('click', () => {
             auth.signOut().then(() => {
-                console.log("Cierre de sesión exitoso.");
                 alert("Has cerrado sesión.");
                 window.location.href = 'login.html';
             }).catch((error) => {
-                console.error("Error al cerrar sesión:", error);
                 alert("Error al cerrar sesión: " + error.message);
             });
         });
     }
     
-    // --- INICIO DEL CÓDIGO ORIGINAL DEL DASHBOARD ---
-    // Variables para los gráficos
-    let salesChart, peakHoursChart; 
+    let salesChart, peakHoursChart, paymentMethodDistributionChart; 
     
     const appState = {
         currentTimeframe: 'hoy',
@@ -407,9 +428,9 @@
                 end.setHours(23, 59, 59, 999);
                 break;
             case 'personalizado':
-                if (!appState.startDate || !appState.endDate) { // Fallback si las fechas no están seteadas
+                if (!appState.startDate || !appState.endDate) { 
                     console.warn("Fechas personalizadas no establecidas, usando 'hoy' por defecto.");
-                    return getDateRange('hoy'); // Llama recursivamente con 'hoy'
+                    return getDateRange('hoy'); 
                 }
                 const customStart = new Date(appState.startDate);
                 customStart.setHours(0, 0, 0, 0);
@@ -426,15 +447,16 @@
     }
 
     async function loadData(timeframe) {
-        console.log("Cargando datos para:", timeframe);
+        // Diagnostic log: Indicate which timeframe is being loaded
+        console.log(`[AdminView] Iniciando carga de datos para el período: ${timeframe}`);
         const { start, end } = getDateRange(timeframe);
+         // Diagnostic log: Show the actual date range being used
+        console.log(`[AdminView] Rango de fechas calculado: INICIO=${start.toISOString()} FIN=${end.toISOString()}`);
         appState.currentTimeframe = timeframe;
         
         document.querySelectorAll('.timeframe-btn').forEach(btn => {
             btn.classList.remove('active');
-            if (btn.dataset.timeframe === timeframe) {
-                btn.classList.add('active');
-            }
+            if (btn.dataset.timeframe === timeframe) btn.classList.add('active');
         });
         
         showLoading();
@@ -442,9 +464,11 @@
         try {
             const currentData = await fetchOrdersData(start, end);
             appState.ordersData = currentData;
+            // Diagnostic log: How many orders were fetched for the current period
+            console.log(`[AdminView] Órdenes obtenidas para el período actual (${timeframe}): ${appState.ordersData.length}`);
             
             let previousStart, previousEnd;
-            if (timeframe === 'hoy') {
+             if (timeframe === 'hoy') {
                 previousStart = new Date(start); previousStart.setDate(start.getDate() - 1);
                 previousEnd = new Date(end); previousEnd.setDate(end.getDate() - 1);
             } else if (timeframe === 'semana') {
@@ -459,25 +483,27 @@
             }
             
             if (timeframe !== 'personalizado' && previousStart && previousEnd) { 
+                // Diagnostic log: Show the date range for the previous period
+                console.log(`[AdminView] Calculando período anterior: INICIO=${previousStart.toISOString()} FIN=${previousEnd.toISOString()}`);
                 const previousData = await fetchOrdersData(previousStart, previousEnd);
                 appState.previousData = previousData;
+                // Diagnostic log: How many orders for the previous period
+                console.log(`[AdminView] Órdenes obtenidas para el período anterior: ${appState.previousData.length}`);
             } else {
                 appState.previousData = [];
             }
             processDataAndUpdateUI();
         } catch (error) {
-            console.error('Error al cargar datos:', error);
-            // alert('Error al cargar datos. Por favor intente nuevamente.'); // Ya manejado en onAuthStateChanged
+            console.error('[AdminView] Error al cargar datos:', error);
         } finally {
             hideLoading();
         }
     }
 
     async function fetchOrdersData(startDate, endDate) {
-        // Asegurarse de que startDate y endDate sean objetos Date válidos
         if (!(startDate instanceof Date) || !(endDate instanceof Date) || isNaN(startDate) || isNaN(endDate)) {
-            console.error("fetchOrdersData recibió fechas inválidas:", startDate, endDate);
-            return []; // Retornar arreglo vacío si las fechas no son válidas
+            console.error("[AdminView] fetchOrdersData recibió fechas inválidas:", startDate, endDate);
+            return []; 
         }
         const startStr = startDate.toISOString().split('T')[0];
         const endStr = endDate.toISOString().split('T')[0];
@@ -487,21 +513,33 @@
         const filteredOrders = [];
         
         if (ordersData) {
+            console.log("[AdminView] Datos crudos de Firebase:", ordersData); // DIAGNÓSTICO: Ver estructura cruda
             for (const dateKey in ordersData) {
-                // Doble verificación, aunque Firebase ya debería haber filtrado por rango
-                // if (dateKey >= startStr && dateKey <= endStr) { 
-                    const ordersForDate = ordersData[dateKey];
-                    for (const orderId in ordersForDate) {
-                        const order = ordersForDate[orderId];
-                        if (order.items && typeof order.items === 'object' && !Array.isArray(order.items)) {
-                            order.items = Object.values(order.items);
-                        } else if (!order.items) {
-                            order.items = []; 
-                        }
-                        filteredOrders.push({ ...order, date: dateKey, orderId: orderId });
+                const ordersForDate = ordersData[dateKey];
+                for (const orderId in ordersForDate) {
+                    const order = ordersForDate[orderId];
+                    // --- INICIO DIAGNÓSTICO DETALLADO POR ORDEN ---
+                    console.log(`[AdminView] Orden obtenida de Firebase (ID: ${orderId}, Fecha: ${dateKey}): paymentMethod='${order.paymentMethod}', total=${order.total}`); 
+                    // --- FIN DIAGNÓSTICO DETALLADO POR ORDEN ---
+
+                    if (order.items && typeof order.items === 'object' && !Array.isArray(order.items)) {
+                        order.items = Object.values(order.items);
+                    } else if (!order.items) {
+                        order.items = []; 
                     }
-                // }
+                    // Si paymentMethod es undefined o null, se asigna "No especificado"
+                    if (order.paymentMethod === undefined || order.paymentMethod === null) {
+                        console.warn(`[AdminView] Orden ID ${orderId} en fecha ${dateKey} NO tiene paymentMethod o es null. Se asigna "No especificado".`);
+                        order.paymentMethod = "No especificado"; 
+                    } else if (typeof order.paymentMethod !== 'string' || order.paymentMethod.trim() === '') {
+                         console.warn(`[AdminView] Orden ID ${orderId} en fecha ${dateKey} tiene paymentMethod inválido ('${order.paymentMethod}'). Se asigna "No especificado".`);
+                        order.paymentMethod = "No especificado";
+                    }
+                    filteredOrders.push({ ...order, date: dateKey, orderId: orderId });
+                }
             }
+        } else {
+            console.log("[AdminView] No se encontraron órdenes en Firebase para el rango especificado.");
         }
         return filteredOrders;
     }
@@ -510,25 +548,58 @@
         const orders = appState.ordersData;
         const previousOrders = appState.previousData;
         
-        const totalSales = orders.reduce((sum, order) => sum + (order.total || 0), 0); 
-        const totalOrders = orders.length;
+        let totalSales = 0, totalCashSales = 0, totalCardSales = 0, totalOtherPaymentSales = 0;
+        let totalOrders = orders.length;
         let totalProducts = 0;
+
+        console.log("[AdminView] --- Iniciando procesamiento de datos para UI ---");
         orders.forEach(order => {
+            const orderTotal = order.total || 0;
+            totalSales += orderTotal;
+            
+            // --- INICIO DIAGNÓSTICO DENTRO DEL BUCLE DE PROCESAMIENTO ---
+            console.log(`[AdminView] Procesando orden para UI: paymentMethod='${order.paymentMethod}', Total=${orderTotal}`); 
+            // --- FIN DIAGNÓSTICO DENTRO DEL BUCLE DE PROCESAMIENTO ---
+            
+            // Asegurarse que la comparación sea exacta y sensible a mayúsculas/minúsculas
+            if (order.paymentMethod === 'Efectivo') {
+                totalCashSales += orderTotal;
+            } else if (order.paymentMethod === 'Tarjeta') {
+                totalCardSales += orderTotal;
+            } else {
+                totalOtherPaymentSales += orderTotal; 
+                if (order.paymentMethod !== "No especificado") { // Solo advertir si no es el default que asignamos
+                    console.warn(`[AdminView] Método de pago no reconocido o no especificado: '${order.paymentMethod}' para orden con total ${orderTotal}. Sumado a 'Otros'.`);
+                }
+            }
+
             if (order.items && Array.isArray(order.items)) {
-                totalProducts += order.items.reduce((sum, item) => sum + (item.quantity || 0), 0); // Sumar cantidades de items
+                totalProducts += order.items.reduce((sum, item) => sum + (item.quantity || 1), 0); 
             }
         });
+        // --- INICIO DIAGNÓSTICO DE TOTALES FINALES ---
+        console.log(`[AdminView] Totales finales calculados: General=${formatMoney(totalSales)}, Efectivo=${formatMoney(totalCashSales)}, Tarjeta=${formatMoney(totalCardSales)}, Otro=${formatMoney(totalOtherPaymentSales)}`);
+        // --- FIN DIAGNÓSTICO DE TOTALES FINALES ---
+
         const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
         
         let previousTotalSales = 0, previousTotalOrders = 0, previousTotalProducts = 0, previousAverageTicket = 0;
+        let previousTotalCashSales = 0, previousTotalCardSales = 0; 
+
         if (previousOrders.length > 0) {
-            previousTotalSales = previousOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-            previousTotalOrders = previousOrders.length;
             previousOrders.forEach(order => {
+                const prevOrderTotal = order.total || 0;
+                previousTotalSales += prevOrderTotal;
+                if (order.paymentMethod === 'Efectivo') {
+                    previousTotalCashSales += prevOrderTotal;
+                } else if (order.paymentMethod === 'Tarjeta') {
+                    previousTotalCardSales += prevOrderTotal;
+                }
                 if (order.items && Array.isArray(order.items)) {
-                     previousTotalProducts += order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+                     previousTotalProducts += order.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
                 }
             });
+            previousTotalOrders = previousOrders.length;
             previousAverageTicket = previousTotalOrders > 0 ? previousTotalSales / previousTotalOrders : 0;
         }
         
@@ -536,20 +607,28 @@
         const ordersChange = previousTotalOrders > 0 ? ((totalOrders - previousTotalOrders) / previousTotalOrders * 100) : (totalOrders > 0 ? 100 : 0);
         const productsChange = previousTotalProducts > 0 ? ((totalProducts - previousTotalProducts) / previousTotalProducts * 100) : (totalProducts > 0 ? 100 : 0);
         const ticketChange = previousAverageTicket > 0 ? ((averageTicket - previousAverageTicket) / previousAverageTicket * 100) : (averageTicket > 0 ? 100 : 0);
-        
+        const cashSalesChange = previousTotalCashSales > 0 ? ((totalCashSales - previousTotalCashSales) / previousTotalCashSales * 100) : (totalCashSales > 0 ? 100 : 0);
+        const cardSalesChange = previousTotalCardSales > 0 ? ((totalCardSales - previousTotalCardSales) / previousTotalCardSales * 100) : (totalCardSales > 0 ? 100 : 0);
+                
         document.getElementById('total-sales').textContent = formatMoney(totalSales);
+        document.getElementById('total-cash-sales').textContent = formatMoney(totalCashSales); 
+        document.getElementById('total-card-sales').textContent = formatMoney(totalCardSales); 
         document.getElementById('total-orders').textContent = totalOrders;
         document.getElementById('total-products').textContent = totalProducts;
         document.getElementById('average-ticket').textContent = formatMoney(averageTicket);
         
         updateChangeIndicator('sales-change', salesChange.toFixed(1));
+        updateChangeIndicator('cash-sales-change', cashSalesChange.toFixed(1)); 
+        updateChangeIndicator('card-sales-change', cardSalesChange.toFixed(1)); 
         updateChangeIndicator('orders-change', ordersChange.toFixed(1));
         updateChangeIndicator('products-change', productsChange.toFixed(1));
         updateChangeIndicator('ticket-change', ticketChange.toFixed(1));
         
         processOrdersByIndividualTable(orders); 
         processChartData(orders); 
-        processTablesPerformance(orders, totalSales); 
+        processTablesPerformance(orders, totalSales);
+        updatePaymentMethodDistributionChart(totalCashSales, totalCardSales, totalOtherPaymentSales); 
+        console.log("[AdminView] --- UI Actualizada ---");
     }
 
     function updateChangeIndicator(elementId, changePercent) {
@@ -559,14 +638,14 @@
         let iconClass = 'fa-equals'; let colorClass = 'text-gray-400';
         if (change > 0) { iconClass = 'fa-caret-up'; colorClass = 'text-green-400'; }
         else if (change < 0) { iconClass = 'fa-caret-down'; colorClass = 'text-red-400'; }
-        element.innerHTML = `<i class="fas ${iconClass} mr-1"></i> ${Math.abs(change)}%`;
+        element.innerHTML = `<i class="fas ${iconClass} mr-1"></i> ${Math.abs(change).toFixed(1)}%`; 
         element.className = `${colorClass} text-sm mt-2 flex items-center`;
     }
 
     function processOrdersByIndividualTable(orders) {
         appState.ordersByIndividualTable = {};
         orders.forEach(order => {
-            const table = order.table || 'Takeout'; // Asume 'Takeout' si no hay mesa
+            const table = order.table || 'Takeout'; 
             if (!appState.ordersByIndividualTable[table]) {
                 appState.ordersByIndividualTable[table] = 0;
             }
@@ -604,8 +683,8 @@
     function processChartData(orders) {
         const salesByDay = {}; const ordersByHour = Array(24).fill(0);
         orders.forEach(order => {
-            const orderDateVal = order.date.includes('T') ? order.date.split('T')[0] : order.date; // Manejar si ya tiene T00:00:00
-            const orderDate = new Date(orderDateVal + 'T00:00:00'); // Asegurar que se interprete como local al inicio del día
+            const orderDateVal = order.date.includes('T') ? order.date.split('T')[0] : order.date; 
+            const orderDate = new Date(orderDateVal + 'T00:00:00'); 
             const dayKey = orderDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }); 
             if (!salesByDay[dayKey]) salesByDay[dayKey] = 0;
             salesByDay[dayKey] += (order.total || 0);
@@ -626,7 +705,7 @@
         salesChart = new Chart(ctx, {
             type: 'bar',
             data: { labels, datasets: [{ label: 'Ventas', data, backgroundColor: 'rgba(217, 119, 6, 0.7)', borderColor: 'rgba(217, 119, 6, 1)', borderWidth: 1, borderRadius: 4 }] },
-            options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => formatMoney(c.raw) }}}, scales: { y: { beginAtZero: true, ticks: { callback: v => formatMoney(v) }}} }
+            options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => formatMoney(c.raw) }}}, scales: { y: { beginAtZero: true, ticks: { callback: v => formatMoney(v), color: '#9ca3af' }}, x: { ticks: { color: '#9ca3af' }} } }
         });
     }
 
@@ -638,7 +717,73 @@
         peakHoursChart = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets: [{ label: 'Órdenes por hora', data, backgroundColor: 'rgba(217, 119, 6, 0.2)', borderColor: 'rgba(217, 119, 6, 1)', borderWidth: 2, tension: 0.4, fill: true }] },
-            options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true, ticks: { precision: 0 }}}}
+            options: { responsive: true, plugins: { legend: { display: false }}, scales: { y: { beginAtZero: true, ticks: { precision: 0, color: '#9ca3af' }}, x: { ticks: { color: '#9ca3af' }} }}
+        });
+    }
+
+    function updatePaymentMethodDistributionChart(cashSales, cardSales, otherSales = 0) {
+        const ctx = document.getElementById('paymentMethodDistributionChart')?.getContext('2d');
+        if (!ctx) return;
+
+        const total = cashSales + cardSales + otherSales;
+        
+        if (paymentMethodDistributionChart) {
+            paymentMethodDistributionChart.destroy();
+        }
+
+        if (total === 0) { 
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.font = "16px Poppins";
+            ctx.fillStyle = "#777";
+            ctx.textAlign = "center";
+            ctx.fillText("No hay datos de métodos de pago.", ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
+
+        const dataValues = [cashSales, cardSales];
+        const labels = ['Efectivo', 'Tarjeta'];
+        const backgroundColors = ['rgba(16, 185, 129, 0.7)', 'rgba(14, 165, 233, 0.7)']; 
+        const borderColors = ['rgba(16, 185, 129, 1)', 'rgba(14, 165, 233, 1)'];
+
+        if (otherSales > 0) {
+            labels.push('Otro/No Esp.');
+            dataValues.push(otherSales);
+            backgroundColors.push('rgba(107, 114, 128, 0.7)');
+            borderColors.push('rgba(107, 114, 128, 1)');
+        }
+
+        paymentMethodDistributionChart = new Chart(ctx, {
+            type: 'pie',
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    data: dataValues, 
+                    backgroundColor: backgroundColors, 
+                    borderColor: borderColors, 
+                    borderWidth: 1 
+                }] 
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { color: 'white' }},
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed !== null) {
+                                    label += formatMoney(context.parsed);
+                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    label += ` (${percentage}%)`;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -662,6 +807,10 @@
         const tbody = document.getElementById('tables-performance');
         if(!tbody) return;
         tbody.innerHTML = '';
+        if (tablesData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-4">No hay datos de desempeño por mesa.</td></tr>';
+            return;
+        }
         tablesData.forEach(data => {
             const row = document.createElement('tr');
             row.className = 'border-b border-gray-700 hover:bg-gray-700';
@@ -679,10 +828,9 @@
     function showLoading() { /* Implementar si es necesario */ }
     function hideLoading() { /* Implementar si es necesario */ }
 
-    // --- Función para inicializar el dashboard y sus listeners ---
     function initializeDashboard() {
         updateCurrentDate();
-        loadData('hoy'); // Carga inicial de datos
+        loadData('hoy'); 
         
         document.querySelectorAll('.timeframe-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -708,8 +856,8 @@
                 const startDateInput = document.getElementById('start-date').value;
                 const endDateInput = document.getElementById('end-date').value;
                 if (startDateInput && endDateInput) {
-                    appState.startDate = new Date(startDateInput + 'T00:00:00'); // Especificar hora para evitar problemas de zona
-                    appState.endDate = new Date(endDateInput + 'T23:59:59');   // Especificar hora para evitar problemas de zona
+                    appState.startDate = new Date(startDateInput + 'T00:00:00'); 
+                    appState.endDate = new Date(endDateInput + 'T23:59:59');   
                     if (appState.startDate > appState.endDate) {
                         alert('La fecha de inicio no puede ser posterior a la fecha de fin.'); return;
                     }
@@ -728,16 +876,7 @@
                 event.currentTarget.classList.add('active');
             });
         });
-
-        // El botón de dashboard ya está activo por defecto en el HTML
-        // const dashboardButton = document.querySelector('.nav-btn[data-tab="dashboard"]');
-        // if (dashboardButton && !dashboardButton.classList.contains('active')) { // Evitar re-activar si ya lo está
-        //    dashboardButton.classList.add('active');
-        // }
     }
-
-    // La inicialización del dashboard (initializeDashboard()) se llama ahora
-    // dentro del chequeo de onAuthStateChanged si el usuario es gerente.
 </script>
 </body>
 </html>
