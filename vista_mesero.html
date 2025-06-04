@@ -142,7 +142,7 @@
             body.printing, body.printing * {
                 visibility: hidden;
             }
-            .no-print { /* Clase para ocultar elementos específicos de la interfaz al imprimir */
+            .no-print {
                 display: none !important;
             }
             #printable-ticket-area {
@@ -151,7 +151,7 @@
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
-                width: 80mm !important; /* Ancho típico de ticket térmico */
+                width: 80mm !important;
                 margin: 0 !important;
                 padding: 5mm !important;
                 font-family: 'Courier New', Courier, monospace !important;
@@ -765,7 +765,7 @@
         }, 300); 
     }
 
-    // FUNCIÓN PARA ENVIAR TICKET POR CORREO (VERSIÓN MEJORADA)
+    // FUNCIÓN PARA ENVIAR TICKET POR CORREO (MODIFICADA PARA ADJUNTAR PDF MANUALMENTE)
     function sendTicketByEmail(tableNumber, paymentMethod = "No especificado") {
         const orderItems = appState.orders[tableNumber];
         if (!orderItems || orderItems.length === 0) {
@@ -783,91 +783,24 @@
             return;
         }
 
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        // 1. Generar y descargar el PDF
+        alert("Se generará el PDF del ticket. Por favor, guarda el archivo para poder adjuntarlo al correo.");
+        generatePDFTicket(tableNumber, paymentMethod); // Esta función ya incluye doc.save()
 
-        let ticketText = "TAQUERÍA MS\n";
-        ticketText += "Av. Pantitlán 397, Evolución, Nezahualcóyotl\n";
-        ticketText += "Tel: 55 1234 5678\n";
-        ticketText += "------------------------------------------\n"; 
-        ticketText += `Mesa: #${tableNumber}\n`;
-        ticketText += `Fecha: ${dateStr} Hora: ${timeStr}\n`;
-        ticketText += `Método de Pago: ${paymentMethod}\n`;
-        ticketText += "------------------------------------------\n";
-        ticketText += "Producto             Cant.   Total\n";
-        ticketText += "------------------------------------------\n";
-
-        const groupedItems = {};
-        orderItems.forEach(item => {
-            const key = `${item.name}-${JSON.stringify(item.customizations || {})}`;
-            if (!groupedItems[key]) {
-                groupedItems[key] = { ...item, quantity: 0, price: item.price };
-            }
-            groupedItems[key].quantity++;
-        });
-
-        let calculatedTotal = 0;
-        Object.values(groupedItems).forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            calculatedTotal += itemTotal;
-
-            let itemName = item.name.substring(0, 20).padEnd(20, ' ');
-            let itemQty = item.quantity.toString().padStart(5, ' ');
-            let itemPriceTotal = `$${itemTotal.toFixed(2)}`.padStart(8, ' ');
-            ticketText += `${itemName}${itemQty}${itemPriceTotal}\n`;
-
-            if (item.customizations) {
-                let custCombinedText = '';
-                if (item.customizations.ingredients && item.customizations.ingredients.length > 0) {
-                    custCombinedText += item.customizations.ingredients.map(ing => ing.replace(/-/g, ' ')).join(', ');
-                }
-                if (item.customizations.notes) {
-                    custCombinedText += (custCombinedText ? ' | ' : '') + `Nota: ${item.customizations.notes}`;
-                }
-
-                if (custCombinedText) {
-                    const maxCustLineLength = 35; 
-                    let currentCustLine = "  (";
-                    const words = custCombinedText.split(' ');
-                    for (const word of words) {
-                        if ((currentCustLine + word + " ").length > maxCustLineLength && currentCustLine.length > 3) {
-                            ticketText += currentCustLine.trimRight() + "\n";
-                            currentCustLine = "   " + word + " ";
-                        } else {
-                            currentCustLine += word + " ";
-                        }
-                    }
-                    ticketText += currentCustLine.trimRight() + ")\n";
-                }
-            }
-        });
-
-        ticketText += "------------------------------------------\n";
-        let totalLabel = "TOTAL:";
-        let formattedTotal = `$${calculatedTotal.toFixed(2)}`;
-        ticketText += totalLabel.padEnd(25) + formattedTotal.padStart(8, ' ') + "\n";
-        ticketText += "------------------------------------------\n";
-        ticketText += "¡Gracias por su preferencia!\n";
-
+        // 2. Preparar el enlace mailto con instrucciones
         const subject = `Ticket Taquería MS - Mesa #${tableNumber}`;
-        const body = encodeURIComponent(ticketText);
-        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
+        const bodyMessage = `Estimado cliente,\n\nPor favor, encuentre adjunto el ticket (PDF) de su consumo en Taquería MS para la Mesa #${tableNumber}.\n\nDeberá adjuntar manualmente el archivo PDF que se acaba de descargar (generalmente llamado 'TaqueriaMS_Mesa${tableNumber}_...pdf').\n\n¡Gracias por su preferencia!`;
+        
+        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyMessage)}`;
 
-        console.log("Generated mailto link:", mailtoLink);
-        console.log("Ticket text (raw):", ticketText);
-        console.log("Ticket text length (for body):", ticketText.length);
-
-        if (ticketText.length > 1800) { 
-             alert("Advertencia: El contenido del ticket es muy largo y podría no funcionar correctamente en algunos clientes de correo. Considere usar la opción PDF.");
-        }
+        console.log("Generated mailto link (for manual PDF attachment):", mailtoLink);
 
         try {
             window.location.href = mailtoLink;
-            alert("Se intentará abrir tu aplicación de correo con el ticket. Por favor, revisa tu cliente de correo y envía el mensaje manualmente.");
+            alert("Se intentará abrir tu aplicación de correo. Por favor, adjunta el PDF del ticket que se descargó y luego envía el mensaje.");
         } catch (e) {
             console.error("Error al intentar abrir mailto link:", e);
-            alert("Ocurrió un error al intentar abrir tu aplicación de correo. Por favor, revisa la consola del navegador (F12) para más detalles y asegúrate de tener un cliente de correo configurado.");
+            alert("Ocurrió un error al intentar abrir tu aplicación de correo. Asegúrate de tener un cliente de correo configurado. El PDF del ticket se ha descargado para que puedas adjuntarlo manualmente.");
         }
     }
 
@@ -1000,7 +933,7 @@
         const groupedItems = {};
         items.forEach(item => {
             const key = `${item.name}-${JSON.stringify(item.customizations || {})}`;
-            if (!groupedItems[key]) groupedItems[key] = { ...item, quantity: 0, price: item.price }; // Ensure price is copied
+            if (!groupedItems[key]) groupedItems[key] = { ...item, quantity: 0, price: item.price }; 
             else groupedItems[key].quantity++;
         });
         doc.setFontSize(10); doc.setTextColor(40, 40, 40);
@@ -1073,7 +1006,6 @@
     function activateEventListeners() {
         const toggleButtons = document.querySelectorAll('.toggle-details');
         toggleButtons.forEach(button => {
-            // Clone and replace to avoid multiple listeners if activateEventListeners is called multiple times
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
             newButton.addEventListener('click', function() {
@@ -1121,7 +1053,6 @@
         if (firstCategoryBtn) {
             firstCategoryBtn.classList.remove('bg-gray-700');
             firstCategoryBtn.classList.add('bg-amber-600', 'active');
-            // loadProducts(firstCategoryBtn.dataset.category); // loadProducts called by switchTab
         }
         document.querySelectorAll('.nav-btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -1137,14 +1068,14 @@
             if (!appState.firebaseOrderKeysForTable[i]) appState.firebaseOrderKeysForTable[i] = [];
         }
         
-        switchTab('menu'); // Ensure menu is the default active tab and products are loaded
+        switchTab('menu'); 
         const activeCategoryBtn = document.querySelector('.category-btn.active');
         if (activeCategoryBtn) {
              loadProducts(activeCategoryBtn.dataset.category);
         } else if(firstCategoryBtn) {
-            firstCategoryBtn.click(); // Simulate click to set active and load products
+            firstCategoryBtn.click(); 
         } else {
-            loadProducts('tacos'); // Fallback if no category buttons
+            loadProducts('tacos'); 
         }
 
         if (!appState.currentTable) {
