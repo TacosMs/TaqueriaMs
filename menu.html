@@ -141,7 +141,7 @@
 
         .chip.new {
             background-color: #eff6ff;
-            color: #2563eb;
+            color: #b65c04;
         }
 
         /* Estilos para cards de Tacos/Burritos */
@@ -158,11 +158,11 @@
 
         /* Estilos para cards de Bebidas */
         .bebida-card {
-            animation: cardFloat 3s ease infinite;
-            background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%);
-            box-shadow: 0 10px 25px rgba(30, 58, 138, 0.3),
-                0 0 0 3px rgba(30, 58, 138, 0.1),
-                0 0 20px 5px rgba(147, 197, 253, 0.3) inset;
+            animation: cardJump 3s ease infinite;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3),
+                0 0 0 3px rgba(239, 68, 68, 0.1),
+                0 0 20px 5px rgba(252, 211, 77, 0.3) inset;
             border-radius: 15px;
             overflow: hidden;
             transition: all 0.5s ease;
@@ -221,10 +221,10 @@
     <nav
         class="fixed top-0 left-0 right-0 z-50 py-3 px-4 bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg shadow-sm">
         <div class="flex justify-between items-center max-w-7xl mx-auto">
-            <a href="#" class="text-xl md:text-2xl font-bold text-gray-800">
-                <span class="text-amber-600">Taquería</span> MS
+            <a href="#" class="flex items-center space-x-2 text-xl md:text-2xl font-bold text-gray-800">
+                <img src="imagenes/logo.png.jpg" alt="Logo Taquería MS" class="h-8 w-8 md:h-10 md:w-10">
+                <span><span class="text-amber-600">Taquería</span> MS</span>
             </a>
-
             <div class="hidden md:flex space-x-6">
                 <a href="#tacos" class="font-medium hover:text-amber-600 transition">Tacos/Burritos</a>
                 <a href="#bebidas" class="font-medium hover:text-amber-600 transition">Bebidas</a>
@@ -397,7 +397,7 @@
                             <h3 class="text-xl font-bold text-gray-800">Hawaiano</h3>
                             <span class="text-lg font-bold text-amber-600">$32</span>
                         </div>
-                        <p class="text-gray-600 mt-2">Bistec acompañado de piña dorada. Dulce, salado y muy sabroso.</p>
+                        <p class="text-gray-600 mt-2">Chuleta con queso acompañado de piña dorada. Dulce, salado y muy sabroso.</p>
                     </div>
                 </div>
                 <div class="taco-burrito-card">
@@ -536,6 +536,118 @@
                             pechuga de pollo, alambre y queso Oaxaca. ¡El rey de los burritos!</p>
                     </div>
                 </div>
+                <!-- Tarjeta con advertencia -->
+                <div class="taco-burrito-card relative">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="imagenes/Burrito Supremo.jpeg" alt="Burrito Supremo"
+                            class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                        <div class="absolute top-3 right-3">
+                            <span class="chip veg">⭐ Especialidad</span>
+                        </div>
+                        <!-- Botón de advertencia -->
+                        <button onclick="mostrarAdvertencia()"
+                            class="absolute bottom-3 right-3 bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-2 py-1 rounded flex items-center shadow">
+                            ⚠️ Aviso
+                        </button>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">Buffet Infantil "Tacos & Burritos" </h3>
+                            <span class="text-lg font-bold text-amber-600">$130</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">¡Come todo lo que puedas!
+                            Disfruta de nuestro Buffet de Tacos y Burritos, donde puedes elegir entre una deliciosa
+                            variedad de guisos clásicos y especiales. ¡Sirve, combina y repite a tu antojo!</p>
+                    </div>
+                </div>
+
+                <!-- Modal emergente -->
+                <div id="advertenciaModal"
+                    class="fixed inset-0 z-50 bg-black bg-opacity-50 hidden justify-center items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+                        <h2 class="text-lg font-bold text-red-600 mb-4">🚫 ¡Atención!</h2>
+                        <p class="text-gray-800 text-sm">
+                            NO SE PUEDE COMPARTIR, NO APLICA PARA LLEVAR.<br>
+                            LOS TACOS SON CON DOBLE TORTILLA.<br>
+                            PEDIR SOLO LO QUE SE VA A CONSUMIR.<br>
+                            EN DADO CASO DE DEJAR COMIDA, SE PAGA EL DOBLE.
+                        </p>
+                        <button onclick="cerrarAdvertencia()"
+                            class="mt-5 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+
+                <!-- JavaScript para mostrar/cerrar el modal -->
+                <script>
+                    function mostrarAdvertencia() {
+                        document.getElementById("advertenciaModal").classList.remove("hidden");
+                        document.getElementById("advertenciaModal").classList.add("flex");
+                    }
+
+                    function cerrarAdvertencia() {
+                        document.getElementById("advertenciaModal").classList.add("hidden");
+                        document.getElementById("advertenciaModal").classList.remove("flex");
+                    }
+                </script>
+                <!-- Tarjeta con advertencia -->
+                <div class="taco-burrito-card relative">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="imagenes/Burrito de bistec.jpeg" alt="Burrito Supremo"
+                            class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                        <div class="absolute top-3 right-3">
+                            <span class="chip veg">⭐ Especialidad</span>
+                        </div>
+                        <!-- Botón de advertencia -->
+                        <button onclick="mostrarAdvertencia()"
+                            class="absolute bottom-3 right-3 bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-2 py-1 rounded flex items-center shadow">
+                            ⚠️ Aviso
+                        </button>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">Buffet Adulto "Taco & Burritos"</h3>
+                            <span class="text-lg font-bold text-amber-600">$150</span>
+                        </div>
+                        <p class="text-gray-600 mt-2">¡Come todo lo que puedas!
+                            Disfruta de nuestro Buffet de Tacos y Burritos, donde puedes elegir entre una deliciosa
+                            variedad de guisos clásicos y especiales. ¡Sirve, combina y repite a tu antojo!</p>
+                    </div>
+                </div>
+
+                <!-- Modal emergente -->
+                <div id="advertenciaModal"
+                    class="fixed inset-0 z-50 bg-black bg-opacity-50 hidden justify-center items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+                        <h2 class="text-lg font-bold text-red-600 mb-4">🚫 ¡Atención!</h2>
+                        <p class="text-gray-800 text-sm">
+                            NO SE PUEDE COMPARTIR, NO APLICA PARA LLEVAR.<br>
+                            LOS TACOS SON CON DOBLE TORTILLA.<br>
+                            PEDIR SOLO LO QUE SE VA A CONSUMIR.<br>
+                            EN DADO CASO DE DEJAR COMIDA, SE PAGA EL DOBLE.
+                        </p>
+                        <button onclick="cerrarAdvertencia()"
+                            class="mt-5 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+
+                <!-- JavaScript para mostrar/cerrar el modal -->
+                <script>
+                    function mostrarAdvertencia() {
+                        document.getElementById("advertenciaModal").classList.remove("hidden");
+                        document.getElementById("advertenciaModal").classList.add("flex");
+                    }
+
+                    function cerrarAdvertencia() {
+                        document.getElementById("advertenciaModal").classList.add("hidden");
+                        document.getElementById("advertenciaModal").classList.remove("flex");
+                    }
+                </script>
+
+
             </div>
         </section>
 
@@ -547,13 +659,13 @@
                 <!-- Bebida 1 -->
                 <div class="bebida-card">
                     <div class="relative h-48 overflow-hidden bg-white flex items-center justify-center">
-                        <img src="imagenes/7up.webp" alt="Refresco 7up"
+                        <img src="imagenes/7up.png" alt="Refresco 7up"
                             class="w-full h-full object-contain transition-transform duration-500 hover:scale-90">
                     </div>
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-gray-800">🟢 7UP</h3>
-                            <span class="text-lg font-bold text-blue-600">$25</span>
+                            <span class="text-lg font-bold text-amber-600">$25</span>
                         </div>
                         <p class="text-gray-600 mt-2">Refresco de limón-lima sin cafeína. Refrescante y burbujeante,
                             ideal para acompañar tacos.</p>
@@ -569,7 +681,7 @@
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-gray-800">🍎 Manzanita</h3>
-                            <span class="text-lg font-bold text-blue-600">$25</span>
+                            <span class="text-lg font-bold text-amber-600">$25</span>
                         </div>
                         <p class="text-gray-600 mt-2">Refresco de manzana con sabor dulce y ligero. Ideal para niños y
                             adultos.</p>
@@ -585,7 +697,7 @@
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-gray-800">🍷 Sangría Señorial</h3>
-                            <span class="text-lg font-bold text-blue-600">$25</span>
+                            <span class="text-lg font-bold text-amber-600">$25</span>
                         </div>
                         <p class="text-gray-600 mt-2">Refresco con sabor a uva y toques especiados. Sabe a fiesta en
                             cada trago.</p>
@@ -601,7 +713,7 @@
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-gray-800">🍊 Mirinda</h3>
-                            <span class="text-lg font-bold text-blue-600">$25</span>
+                            <span class="text-lg font-bold text-amber-600">$25</span>
                         </div>
                         <p class="text-gray-600 mt-2">Sabor a naranja intenso y dulce. Muy popular entre los amantes del
                             sabor afrutado.</p>
@@ -617,7 +729,7 @@
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-gray-800">🟡 Squirt</h3>
-                            <span class="text-lg font-bold text-blue-600">$25</span>
+                            <span class="text-lg font-bold text-amber-600">$25</span>
                         </div>
                         <p class="text-gray-600 mt-2">Refresco de toronja con un toque ácido y burbujeante. Perfecto
                             para los que buscan algo diferente.</p>
@@ -633,7 +745,7 @@
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-gray-800">🔵 Pepsi</h3>
-                            <span class="text-lg font-bold text-blue-600">$25</span>
+                            <span class="text-lg font-bold text-amber-600">$25</span>
                         </div>
                         <p class="text-gray-600 mt-2">Refresco de cola con sabor dulce y chispeante. Un clásico que
                             nunca falla.</p>
@@ -672,10 +784,12 @@
                     class="bg-amber-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-amber-700 transition">
                     <i class="fab fa-instagram"></i>
                 </a>
-                <a href="#" title="WhatsApp"
-                    class="bg-amber-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-amber-700 transition">
-                    <i class="fab fa-whatsapp"></i>
+                <a href="https://www.tiktok.com/@empresasms" title="TikTok"
+                    class="bg-amber-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-amber-700 transition"
+                    target="bg_amber-700" rel="noopener noreferrer">
+                    <i class="fab fa-tiktok"></i>
                 </a>
+
             </div><br><br>
             <h3 class="font-bold mb-2">Servicios de delivery</h3><br>
             <div class="flex justify-center space-x-4">
@@ -737,7 +851,7 @@
         </div>
     </footer>
 
-    <a href="https://wa.me/525512345678?text=Hola,%20quisiera%20hacer%20un%20pedido" target="_blank"
+    <a href="https://wa.me/525621531429?text=Hola,%20quisiera%20hacer%20un%20pedido" target="_blank"
         rel="noopener noreferrer"
         class="fixed bottom-8 right-8 bg-green-500 text-white w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg floating">
         <i class="fab fa-whatsapp"></i>
